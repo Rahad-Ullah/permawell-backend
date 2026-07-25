@@ -7,7 +7,6 @@ import {
   TransactionType,
 } from '../../modules/transaction/transaction.constants';
 import { stripe } from '../../../config/stripe';
-import { Setting } from '../../modules/setting/setting.model';
 import {
   PayoutProvider,
   SupportedCurrency,
@@ -35,12 +34,11 @@ const onCheckoutSessionCompleted = async (event: Stripe.Event) => {
   });
   const balanceTransaction = (paymentIntent.latest_charge as Stripe.Charge)
     ?.balance_transaction as Stripe.BalanceTransaction;
-  const setting = await Setting.findOne().select('platformFeePercentage');
 
   // 3. Format financial data
   const totalAmount = balanceTransaction.amount / 100;
   const gatewayFee = balanceTransaction?.fee / 100 || 0;
-  const platformFeePercentage = setting?.platformFeePercentage || 0;
+  const platformFeePercentage = 0;
   const platformFee = (totalAmount * platformFeePercentage) / 100;
   const netAmount = totalAmount - platformFee;
 
@@ -100,10 +98,9 @@ const onAsyncPaymentFailed = async (event: Stripe.Event) => {
   });
   const balanceTransaction = (paymentIntent.latest_charge as Stripe.Charge)
     ?.balance_transaction as Stripe.BalanceTransaction;
-  const setting = await Setting.findOne().select('platformFeePercentage');
   const totalAmount = balanceTransaction.amount / 100;
   const gatewayFee = balanceTransaction?.fee / 100 || 0;
-  const platformFeePercentage = setting?.platformFeePercentage || 0;
+  const platformFeePercentage = 0;
   const platformFee = (totalAmount * platformFeePercentage) / 100;
   const netAmount = totalAmount - platformFee;
 
@@ -172,10 +169,9 @@ const onCheckoutSessionExpired = async (event: Stripe.Event) => {
   });
   const balanceTransaction = (paymentIntent.latest_charge as Stripe.Charge)
     ?.balance_transaction as Stripe.BalanceTransaction;
-  const setting = await Setting.findOne().select('platformFeePercentage');
   const totalAmount = balanceTransaction.amount / 100;
   const gatewayFee = balanceTransaction?.fee / 100 || 0;
-  const platformFeePercentage = setting?.platformFeePercentage || 0;
+  const platformFeePercentage = 0;
   const platformFee = (totalAmount * platformFeePercentage) / 100;
   const netAmount = totalAmount - platformFee;
 
@@ -322,7 +318,7 @@ const onRefundFailed = async (event: Stripe.Event) => {
       {
         $set: {
           status: TransactionStatus.Failed,
-          isPaid: false, 
+          isPaid: false,
         },
       },
       { new: true },

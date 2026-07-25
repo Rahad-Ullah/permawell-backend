@@ -2,11 +2,16 @@ import { Model, ObjectId } from 'mongoose';
 
 export interface ISetting {
   _id: ObjectId;
-  platformFeePercentage: number;
   contactInfo: {
     email: string;
-    phone: string;
-    whatsApp: string;
+    phone: {
+      countryCode: string;
+      number: string;
+    };
+    whatsApp: {
+      countryCode: string;
+      number: string;
+    };
     address: string;
     location: {
       type: string;

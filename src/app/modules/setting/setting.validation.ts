@@ -4,12 +4,21 @@ import { z } from 'zod';
 const updateSettingValidation = z.object({
   body: z
     .object({
-      platformFeePercentage: z.number().min(0).max(100).optional(),
       contactInfo: z
         .object({
           email: z.string().email().optional(),
-          phone: z.coerce.string().optional(),
-          whatsApp: z.string().optional(),
+          phone: z
+            .object({
+              countryCode: z.string().optional(),
+              number: z.string().optional(),
+            })
+            .optional(),
+          whatsApp: z
+            .object({
+              countryCode: z.string().optional(),
+              number: z.string().optional(),
+            })
+            .optional(),
           address: z.string().optional(),
           location: z
             .object({
@@ -18,6 +27,7 @@ const updateSettingValidation = z.object({
             })
             .optional(),
         })
+        .strict()
         .optional(),
       socialLinks: z
         .object({
@@ -32,6 +42,7 @@ const updateSettingValidation = z.object({
           discord: z.string().url().or(z.literal('')).optional(),
           telegram: z.string().url().or(z.literal('')).optional(),
         })
+        .strict()
         .optional(),
     })
     .strict(),
