@@ -7,12 +7,12 @@ import deleteS3File from '../../../shared/deleteS3File';
 import generateOTP from '../../../utils/generateOTP';
 import { IUser } from './user.interface';
 import { User } from './user.model';
-import { UserRole, UserStatus, VerificationStatus } from './user.constant';
+import { UserRole, UserStatus } from './user.constant';
 import QueryBuilder from '../../builder/QueryBuilder';
-import mongoose, { Types } from 'mongoose';
+import mongoose from 'mongoose';
 import { sendNotifications } from '../../../helpers/notificationHelper';
 import { NotificationType } from '../notification/notification.constant';
-import { Wallet } from '../wallet/wallet.model';
+import { CareProvider } from '../careProvider/careProvider.model';
 
 const createUserToDB = async (payload: Partial<IUser>) => {
   const session = await mongoose.startSession();
@@ -34,13 +34,13 @@ const createUserToDB = async (payload: Partial<IUser>) => {
       throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
     }
 
-    // Create wallet for host
+    // Create care provider profile
     if (createdUser.role === UserRole.CareProvider) {
-      const [wallet] = await Wallet.create([{ user: createdUser._id }], {
+      const [careProvider] = await CareProvider.create([{ user: createdUser._id }], {
         session,
       });
-      if (!wallet) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create wallet');
+      if (!careProvider) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create care provider');
       }
     }
 
