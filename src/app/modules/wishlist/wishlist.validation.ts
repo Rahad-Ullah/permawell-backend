@@ -4,14 +4,14 @@ import { objectId } from '../../../shared/objectIdValidator';
 // toggle wishlist validation
 const toggleWishlistValidation = z.object({
   body: z.object({
-    property: objectId('property'),
+    careProvider: objectId('CareProvider'),
   }),
 });
 
 // get wishlist by user id validation
 const getWishlistByUserIdValidation = z.object({
   params: z.object({
-    id: objectId('user'),
+    id: objectId('User'),
   }),
 });
 

@@ -3,13 +3,14 @@ import { WishlistController } from './wishlist.controller';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { WishlistValidations } from './wishlist.validation';
+import { UserRole } from '../user/user.constant';
 
 const router = express.Router();
 
 // toggle wishlist
 router.post(
     '/toggle',
-    auth(),
+    auth(UserRole.CareSeeker),
     validateRequest(WishlistValidations.toggleWishlistValidation),
     WishlistController.toggleWishlist,
 );

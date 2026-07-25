@@ -1,12 +1,22 @@
+import { StatusCodes } from 'http-status-codes';
+import ApiError from '../../../errors/ApiError';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { UserRole } from '../user/user.constant';
+import { User } from '../user/user.model';
 import { IWishlist } from './wishlist.interface';
 import { Wishlist } from './wishlist.model';
 
 // ------------ toggle wishlist service ----------
 const toggleWishlist = async (payload: IWishlist) => {
-  const { user, property } = payload;
+  const { user, careProvider } = payload;
 
-  const existingWishlist = await Wishlist.findOne({ user, property });
+  // check if the care provider is valid
+  const existingCareProvider = await User.exists({ _id: careProvider, role: UserRole.CareProvider });
+  if (!existingCareProvider) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Care provider not found');
+  }
+
+  const existingWishlist = await Wishlist.findOne({ user, careProvider });
 
   if (existingWishlist) {
     // If wishlist exists, remove it (toggle off)
@@ -34,8 +44,8 @@ const getWishlistByUserId = async (userId: string) => {
 
   const [data, pagination] = await Promise.all([
     wishlistQuery.modelQuery
-      .populate('property')
-      .populate('user', 'firstName lastName role email image'),
+      .populate('careProvider')
+      .populate('user', 'name role email image'),
     wishlistQuery.getPaginationInfo(),
   ]);
 

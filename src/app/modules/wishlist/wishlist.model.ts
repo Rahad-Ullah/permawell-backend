@@ -8,15 +8,15 @@ const wishlistSchema = new Schema<IWishlist, WishlistModel>({
     required: true,
     index: true,
   },
-  property: {
+  careProvider: {
     type: Schema.Types.ObjectId,
-    ref: 'Property',
+    ref: 'User',
     required: true,
     index: true,
   },
 }, { timestamps: true });
 
-wishlistSchema.index({ user: 1, property: 1 }, { unique: true });
+wishlistSchema.index({ user: 1, careProvider: 1 }, { unique: true });
 
 export const Wishlist = model<IWishlist, WishlistModel>(
   'Wishlist',
