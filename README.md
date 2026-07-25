@@ -1,4 +1,4 @@
-# Zila Homes
+# Permawell
 
 This is a template project for backend development using Typescript, Node.js, Express, Mongoose, Bcrypt, JWT, NodeMailer, Multer, ESLint, and Prettier. The aim is to reduce setup time for new backend projects.
 
@@ -47,8 +47,8 @@ Ensure you have the following installed:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/Rahad-Ullah/backend-template-typescript-mongoose-express.git
-   cd backend-template-typescript-mongoose-express
+   git clone https://github.com/Rahad-Ullah/permawell-backend.git
+   cd permawell-backend
    ```
 
 2. **Install dependencies:**
