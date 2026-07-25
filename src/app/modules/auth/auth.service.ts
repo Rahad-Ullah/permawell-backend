@@ -41,8 +41,9 @@ const loginUserFromDB = async (payload: ILoginData) => {
 
   //check if user email is verified
   if (!isExistUser.isEmailVerified) {
+    await forgetPasswordToDB(email);
     throw new ApiError(
-      StatusCodes.BAD_REQUEST,
+      StatusCodes.PROXY_AUTHENTICATION_REQUIRED,
       'Please verify your account, then try to login again',
     );
   }
