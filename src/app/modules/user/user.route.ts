@@ -23,22 +23,6 @@ router.patch(
   UserController.updateProfile,
 );
 
-// update kyc
-router.patch(
-  '/kyc',
-  auth(UserRole.Customer, UserRole.Driver, UserRole.Host, UserRole.Owner),
-  fileUploadHandler(),
-  UserController.updateKyc,
-);
-
-// review kyc
-router.patch(
-  '/kyc/:id/review',
-  auth(UserRole.Admin, UserRole.SuperAdmin),
-  validateRequest(UserValidation.reviewKycZodSchema),
-  UserController.reviewKyc,
-);
-
 // update user status
 router.patch(
   '/status/:id',
@@ -53,13 +37,6 @@ router.delete(
   auth(UserRole.Admin, UserRole.SuperAdmin),
   validateRequest(UserValidation.deleteUserZodSchema),
   UserController.deleteSingleUser,
-);
-
-// get my kyc
-router.get(
-  '/kyc/me',
-  auth(UserRole.Customer, UserRole.Driver, UserRole.Host, UserRole.Owner),
-  UserController.getMyKyc,
 );
 
 // get profile

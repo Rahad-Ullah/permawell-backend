@@ -2,12 +2,10 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync';
 import {
-  getMultipleFilesPath,
   getSingleFilePath,
 } from '../../../shared/getFilePath';
 import sendResponse from '../../../shared/sendResponse';
 import { UserService } from './user.service';
-import ApiError from '../../../errors/ApiError';
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const { ...userData } = req.body;
@@ -58,40 +56,6 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
     success: true,
     statusCode: StatusCodes.OK,
     message: 'Profile updated successfully',
-    data: result,
-  });
-});
-
-// update kyc
-const updateKyc = catchAsync(async (req: Request, res: Response) => {
-  const docs = getMultipleFilesPath(req.files, 'doc') || [];
-  const images = getMultipleFilesPath(req.files, 'image') || [];
-  const documents = [...docs, ...images];
-  if (!documents || documents?.length === 0) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Please upload documents');
-  }
-
-  const result = await UserService.updateKycToDB(req.user.id, { documents });
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'KYC updated successfully',
-    data: result,
-  });
-});
-
-// review kyc
-const reviewKyc = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.reviewKycToDB(req.params.id, {
-    ...req.body,
-    reviewedBy: req.user.id,
-  });
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'KYC reviewed successfully',
     data: result,
   });
 });
@@ -151,8 +115,6 @@ export const UserController = {
   getSingleUser,
   getMyKyc,
   updateProfile,
-  updateKyc,
-  reviewKyc,
   updateStatus,
   deleteSingleUser,
   getAllUsers,

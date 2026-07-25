@@ -35,7 +35,7 @@ const createUserToDB = async (payload: Partial<IUser>) => {
     }
 
     // Create wallet for host
-    if (createdUser.role === UserRole.Host) {
+    if (createdUser.role === UserRole.CareProvider) {
       const [wallet] = await Wallet.create([{ user: createdUser._id }], {
         session,
       });
@@ -47,7 +47,7 @@ const createUserToDB = async (payload: Partial<IUser>) => {
     // Generate OTP
     const otp = generateOTP(6);
     const values = {
-      name: createdUser.firstName,
+      name: createdUser.name,
       otp: otp,
       email: createdUser.email!,
     };
@@ -136,123 +136,6 @@ const updateProfileToDB = async (
   return updateDoc;
 };
 
-// ------------ update kyc ------------
-const updateKycToDB = async (
-  userId: string,
-  payload: { documents: string[] },
-): Promise<Partial<IUser | null>> => {
-  const existingUser = await User.findById(userId).select('+verification');
-  if (!existingUser) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
-  }
-
-  // check if user already verified
-  if (existingUser?.verification?.status === VerificationStatus.Verified) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'You are already verified!');
-  }
-
-  const result = await User.findByIdAndUpdate(
-    userId,
-    {
-      $set: {
-        verification: {
-          documents: payload.documents,
-          status: VerificationStatus.Pending,
-          submittedAt: new Date(),
-        },
-      },
-    },
-    { new: true },
-  );
-
-  //unlink file here
-  if (
-    payload.documents &&
-    payload.documents.length > 0 &&
-    existingUser?.verification?.documents &&
-    existingUser.verification.documents.length > 0
-  ) {
-    existingUser.verification.documents.forEach((doc: string) => {
-      deleteS3File(doc);
-    });
-  }
-
-  // send notification to admin
-  const admins = await User.find({
-    role: { $in: [UserRole.Admin, UserRole.SuperAdmin] },
-    status: UserStatus.Active,
-    isDeleted: false,
-  });
-  if (result && admins.length > 0) {
-    const notificationPromises = admins.map(admin =>
-      sendNotifications({
-        type: NotificationType.KycRequest,
-        title: 'Verification Request',
-        message: `Verification request from ${existingUser.firstName} ${existingUser.lastName}.`,
-        receiver: admin._id,
-        referenceId: result._id.toString(),
-      }).catch(error => {
-        console.error(
-          `KYC Review Notification Failed for admin ${admin._id}:`,
-          error,
-        );
-      }),
-    );
-
-    // Execute all notifications in parallel without blocking the main thread
-    Promise.all(notificationPromises);
-  }
-
-  return result;
-};
-
-// ------------ review kyc ------------
-const reviewKycToDB = async (
-  userId: string,
-  payload: {
-    status: VerificationStatus;
-    reviewNotes?: string;
-    reviewedBy: string;
-  },
-): Promise<Partial<IUser | null>> => {
-  const existingUser = await User.findById(userId).select('+verification');
-  if (!existingUser) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
-  }
-
-  const result = await User.findByIdAndUpdate(
-    userId,
-    {
-      $set: {
-        verification: {
-          status: payload.status,
-          reviewNotes: payload.reviewNotes,
-          reviewedAt: new Date(),
-          reviewedBy: new Types.ObjectId(payload.reviewedBy),
-          documents: existingUser?.verification?.documents,
-          submittedAt: existingUser?.verification?.submittedAt,
-        },
-      },
-    },
-    { new: true },
-  );
-
-  // send notification to user
-  if (result) {
-    sendNotifications({
-      type: NotificationType.KycReview,
-      title: 'Verification Review',
-      message: `Your verification request has been ${payload.status}`,
-      receiver: result._id,
-      referenceId: result._id.toString(),
-    }).catch(error => {
-      console.error('KYC Review Notification Failed:', error);
-    });
-  }
-
-  return result;
-};
-
 // ------------ update user status ------------
 const updateStatusToDB = async (
   id: string,
@@ -322,8 +205,6 @@ export const UserService = {
   getProfileFromDB,
   getKycByUserIdFromDB,
   updateProfileToDB,
-  updateKycToDB,
-  reviewKycToDB,
   updateStatusToDB,
   deleteSingleUserFromDB,
   getAllUsersFromDB,

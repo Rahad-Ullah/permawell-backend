@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserGender, UserRole, UserStatus, VerificationStatus } from './user.constant';
+import { UserGender, UserRole, UserStatus } from './user.constant';
 import { objectId } from '../../../shared/objectIdValidator';
 
 const createUserZodSchema = z.object({
@@ -59,20 +59,6 @@ const updateStatusZodSchema = z
     }).strict(),
   })
 
-// review kyc
-const reviewKycZodSchema = z
-  .object({
-    params: z.object({
-      id: objectId('user id'),
-    }).strict(),
-    body: z.object({
-      status: z.enum([VerificationStatus.Verified, VerificationStatus.Rejected], {
-        required_error: 'Status is required',
-      }),
-      reviewNotes: z.string().optional(),
-    }).strict(),
-  })
-
 // delete user
 const deleteUserZodSchema = z.object({
   params: z
@@ -86,6 +72,5 @@ export const UserValidation = {
   createUserZodSchema,
   updateUserZodSchema,
   updateStatusZodSchema,
-  reviewKycZodSchema,
   deleteUserZodSchema,
 };
