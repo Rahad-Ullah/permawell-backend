@@ -110,7 +110,7 @@ const updateAdmin = async (
     }
 
     // Step B: If there are admin fields to update (permissions), execute Admin update
-    if (Array.isArray(permissions) && permissions?.length > 0) {
+    if (Array.isArray(permissions)) {
       const updatedAdmin = await Admin.findByIdAndUpdate(
         user.roleRef,
         { $set: { permissions } },

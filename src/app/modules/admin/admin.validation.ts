@@ -6,12 +6,7 @@ import { objectId } from '../../../shared/objectIdValidator';
 const createAdminZodSchema = z.object({
   body: z
     .object({
-      firstName: z
-        .string({ required_error: 'First name is required' })
-        .nonempty('First name cannot be empty'),
-      lastName: z
-        .string({ required_error: 'Last name is required' })
-        .nonempty('Last name cannot be empty'),
+      name: z.string().nonempty('Name is required'),
       email: z
         .string({ required_error: 'Email is required' })
         .email('Invalid email address'),
@@ -30,15 +25,8 @@ const createAdminZodSchema = z.object({
 const updateAdminZodSchema = z.object({
   body: z
     .object({
-      firstName: z
-        .string({ required_error: 'First name is required' })
-        .nonempty('First name cannot be empty'),
-      lastName: z
-        .string({ required_error: 'Last name is required' })
-        .nonempty('Last name cannot be empty'),
-      email: z
-        .string({ required_error: 'Email is required' })
-        .email('Invalid email address'),
+      name: z.string().nonempty('Name cannot be empty').optional(),
+      email: z.string().email('Invalid email address').optional(),
       phone: z.coerce
         .string({ required_error: 'Phone is required' })
         .min(10, 'Phone must be at least 10 characters long')
