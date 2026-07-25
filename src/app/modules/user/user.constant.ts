@@ -1,10 +1,14 @@
 export enum UserRole {
-  Customer = 'customer',
-  Owner = 'owner',
-  Host = 'host',
-  Driver = 'driver',
-  SuperAdmin = 'super_admin',
+  CareSeeker = 'care_seeker',
+  CareProvider = 'care_provider',
   Admin = 'admin',
+  SuperAdmin = 'super_admin',
+}
+
+export enum UserGender {
+  Male = 'male',
+  Female = 'female',
+  Other = 'other',
 }
 
 export enum UserStatus {

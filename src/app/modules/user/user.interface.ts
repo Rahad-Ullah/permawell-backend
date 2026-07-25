@@ -1,40 +1,37 @@
-import { Model, Types, ObjectId } from 'mongoose';
-import { UserRole, UserStatus, VerificationStatus } from './user.constant';
+import { Model, Types } from 'mongoose';
+import { UserGender, UserRole, UserStatus } from './user.constant';
 
 export interface IUser {
   _id: Types.ObjectId;
   uid: string;
-  firstName: string;
-  lastName: string;
+  name: string;
+  title: string;
+  username: string;
   role: UserRole;
   roleRef: Types.ObjectId;
   email: string;
   password: string;
-  phone: string;
-  image?: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
+  image: string;
+  gender: UserGender;
+  dob: Date;
+  nationality: string;
+  language: string;
+  bio: string;
+  phone: {
+    countryCode: string;
+    number: string;
   };
+  address: string;
   location: {
-    type: string;
-    coordinates: [number, number];
+    type: string,
+    coordinates: [number, number],
   };
+  insurance?: string; // optional, only for doctors
   status: UserStatus;
-  isVerified: boolean;
+  isEmailVerified: boolean;
   isOnline: boolean;
+  lastSeenAt?: Date;
   isDeleted: boolean;
-  verification?: {
-    status: VerificationStatus;
-    documents: string[];
-    submittedAt?: Date;
-    reviewNotes?: string;
-    reviewedAt?: Date;
-    reviewedBy?: Types.ObjectId;
-  };
   authentication?: {
     isResetPassword: boolean;
     oneTimeCode: number;

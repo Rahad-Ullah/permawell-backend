@@ -1,17 +1,12 @@
 import { z } from 'zod';
-import { UserRole, UserStatus, VerificationStatus } from './user.constant';
+import { UserGender, UserRole, UserStatus, VerificationStatus } from './user.constant';
 import { objectId } from '../../../shared/objectIdValidator';
 
 const createUserZodSchema = z.object({
   body: z
     .object({
-      firstName: z
-        .string({ required_error: 'First name is required' })
-        .nonempty('First name cannot be empty'),
-      lastName: z
-        .string({ required_error: 'Last name is required' })
-        .nonempty('Last name cannot be empty'),
-      role: z.enum([UserRole.Customer, UserRole.Driver, UserRole.Host], {
+      name: z.string({ required_error: 'Name is required' }),
+      role: z.enum([UserRole.CareSeeker, UserRole.CareProvider], {
         required_error: 'Role is required',
       }),
       email: z
@@ -20,8 +15,6 @@ const createUserZodSchema = z.object({
       password: z
         .string({ required_error: 'Password is required' })
         .min(8, 'Password must be at least 8 characters long'),
-      phone: z.coerce.string({ required_error: 'Phone is required' }).optional(),
-      image: z.string().optional(),
     })
     .strict(),
 });
@@ -29,26 +22,27 @@ const createUserZodSchema = z.object({
 const updateUserZodSchema = z.object({
   body: z
     .object({
-      firstName: z.string().optional(),
-      lastName: z.string().optional(),
-      email: z.string().email('Invalid email address').optional(),
-      phone: z.coerce.string().optional(),
-      image: z.string().optional(),
-      address: z
-        .object({
-          street: z.string().optional(),
-          city: z.string().optional(),
-          state: z.string().optional(),
-          postalCode: z.string().optional(),
-          country: z.string().optional(),
-        })
-        .optional(),
+      name: z.string().optional(),
+      title: z.string().optional(),
+      username: z.string().optional(),
+      gender: z.enum([UserGender.Male, UserGender.Female, UserGender.Other]).optional(),
+      dob: z.coerce.date().optional(),
+      nationality: z.string().optional(),
+      language: z.string().optional(),
+      bio: z.string().optional(),
+      phone: z.object({
+        countryCode: z.string().optional(),
+        number: z.string().optional(),
+      }).optional(),
+      address: z.string().optional(),
       location: z
         .object({
           type: z.string().optional(),
           coordinates: z.array(z.number()).optional(),
         })
         .optional(),
+      insurance: z.string().optional(),
+      image: z.string().optional(),
     })
     .strict(),
 });

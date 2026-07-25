@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { model, Schema } from 'mongoose';
 import config from '../../../config';
 import { IUser, UserModal } from './user.interface';
-import { UserRole, UserStatus, VerificationStatus } from './user.constant';
+import { UserGender, UserRole, UserStatus } from './user.constant';
 import { autoIncrementPlugin } from '../../../DB/autoIncrementPlugin';
 
 const userSchema = new Schema<IUser, UserModal>(
@@ -12,14 +12,19 @@ const userSchema = new Schema<IUser, UserModal>(
       unique: true,
       trim: true,
     },
-    firstName: {
+    name: {
       type: String,
       required: true,
       trim: true,
     },
-    lastName: {
+    title: {
+      type: String,
+      default: "",
+    },
+    username: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     role: {
@@ -44,35 +49,44 @@ const userSchema = new Schema<IUser, UserModal>(
       select: 0,
       minlength: 8,
     },
-    phone: {
-      type: String,
-      default: '',
-    },
     image: {
       type: String,
       default: '',
     },
+    gender: {
+      type: String,
+      enum: Object.values(UserGender),
+      default: UserGender.Male,
+    },
+    dob: {
+      type: Date,
+      default: null,
+    },
+    nationality: {
+      type: String,
+      default: '',
+    },
+    language: {
+      type: String,
+      default: '',
+    },
+    bio: {
+      type: String,
+      default: '',
+    },
+    phone: {
+      countryCode: {
+        type: String,
+        default: '',
+      },
+      number: {
+        type: String,
+        default: '',
+      },
+    },
     address: {
-      street: {
-        type: String,
-        default: '',
-      },
-      city: {
-        type: String,
-        default: '',
-      },
-      state: {
-        type: String,
-        default: '',
-      },
-      postalCode: {
-        type: String,
-        default: '',
-      },
-      country: {
-        type: String,
-        default: '',
-      },
+      type: String,
+      default: '',
     },
     location: {
       type: {
@@ -85,12 +99,16 @@ const userSchema = new Schema<IUser, UserModal>(
         default: [0, 0],
       },
     },
+    insurance: {
+      type: String,
+      default: '',
+    },
     status: {
       type: String,
       enum: Object.values(UserStatus),
       default: UserStatus.Active,
     },
-    isVerified: {
+    isEmailVerified: {
       type: Boolean,
       default: false,
     },
@@ -98,40 +116,13 @@ const userSchema = new Schema<IUser, UserModal>(
       type: Boolean,
       default: false,
     },
+    lastSeenAt: {
+      type: Date,
+      default: null,
+    },
     isDeleted: {
       type: Boolean,
       default: false,
-    },
-    verification: {
-      type: {
-        status: {
-          type: String,
-          enum: Object.values(VerificationStatus),
-          default: VerificationStatus.Unverified,
-        },
-        documents: {
-          type: [String],
-          default: [],
-        },
-        submittedAt: {
-          type: Date,
-          default: null,
-        },
-        reviewNotes: {
-          type: String,
-          default: '',
-        },
-        reviewedAt: {
-          type: Date,
-          default: null,
-        },
-        reviewedBy: {
-          type: Schema.Types.ObjectId,
-          ref: 'User',
-          default: null,
-        },
-      },
-      select: 0,
     },
     authentication: {
       type: {
@@ -206,6 +197,14 @@ userSchema.plugin(autoIncrementPlugin, {
   prefix: 'USR',
   counterId: 'user_sequence',
   padLength: 6
+});
+
+// set username as uid
+userSchema.pre('save', async function (next) {
+  if (!this.username) {
+    this.username = this.uid;
+  }
+  next();
 });
 
 export const User = model<IUser, UserModal>('User', userSchema);
