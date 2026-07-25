@@ -42,10 +42,25 @@ router.delete(
 // get profile
 router.get('/profile', auth(), UserController.getUserProfile);
 
+// get single user
+router.get(
+  '/single/:id',
+  auth(),
+  validateRequest(UserValidation.getSingleUserZodSchema),
+  UserController.getSingleUser,
+);
+
+// get all providers
+router.get(
+  '/care-providers',
+  auth(UserRole.CareSeeker),
+  UserController.getAllProviders,
+);
+
 // get all users
 router.get(
   '/all',
-  auth(UserRole.Admin, UserRole.SuperAdmin),
+  auth(UserRole.CareSeeker, UserRole.Admin, UserRole.SuperAdmin),
   UserController.getAllUsers,
 );
 

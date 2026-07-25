@@ -4,12 +4,11 @@ import config from '../config';
 import { logger } from '../shared/logger';
 
 const payload = {
-  firstName: 'Super',
-  lastName: 'Admin',
+  name: 'Mr. Super Admin',
   email: config.super_admin.email,
   role: UserRole.SuperAdmin,
   password: config.super_admin.password,
-  isVerified: true,
+  isEmailVerified: true,
 };
 
 export const seedSuperAdmin = async () => {

@@ -26,7 +26,7 @@ router.get(
 // get my transactions
 router.get(
   '/my-transactions',
-  auth(UserRole.Customer),
+  auth(UserRole.CareSeeker),
   TransactionController.getMyTransactions,
 );
 

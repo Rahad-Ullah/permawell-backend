@@ -9,10 +9,11 @@ import { IUser } from './user.interface';
 import { User } from './user.model';
 import { UserRole, UserStatus } from './user.constant';
 import QueryBuilder from '../../builder/QueryBuilder';
-import mongoose from 'mongoose';
+import mongoose, { FilterQuery } from 'mongoose';
 import { sendNotifications } from '../../../helpers/notificationHelper';
 import { NotificationType } from '../notification/notification.constant';
 import { CareProvider } from '../careProvider/careProvider.model';
+import { ICareProvider } from '../careProvider/careProvider.interface';
 
 const createUserToDB = async (payload: Partial<IUser>) => {
   const session = await mongoose.startSession();
@@ -41,6 +42,14 @@ const createUserToDB = async (payload: Partial<IUser>) => {
       });
       if (!careProvider) {
         throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create care provider');
+      }
+      const updatedUser = await User.findByIdAndUpdate(
+        { _id: createdUser._id },
+        { $set: { roleRef: careProvider._id } },
+        { session, new: true },
+      );
+      if (!updatedUser) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update user');
       }
     }
 
@@ -177,15 +186,52 @@ const getKycByUserIdFromDB = async (id: string): Promise<Partial<IUser>> => {
   return user;
 };
 
+// ------------ get all care providers ------------
+const getAllCareProvidersFromDB = async (query: Record<string, unknown>) => {
+  const filter = { role: UserRole.CareProvider, isDeleted: false, status: UserStatus.Active } as any;
+
+  // pre-filter care provider
+  const careProviderFilter: FilterQuery<ICareProvider> = {}
+  if (query.careType) {
+    careProviderFilter.careType = query.careType as string;
+  }
+  if (query.specialty) {
+    careProviderFilter.specialty = query.specialty as string;
+  }
+  if (query.experienceYears) {
+    careProviderFilter.experienceYears = { $gte: Number(query.experienceYears) };
+  }
+
+  if (Object.keys(careProviderFilter).length > 0) {
+    const careProviders = await CareProvider.find(careProviderFilter).select('_id');
+    filter.roleRef = { $in: careProviders.map(cp => cp._id) };
+  }
+
+  const userQuery = new QueryBuilder(
+    User.find(filter),
+    query,
+  )
+    .search(['name', 'username', 'email'])
+    .filter(['careType', 'specialty', 'experienceYears'])
+    .sort()
+    .paginate()
+    .fields();
+
+  const [users, pagination] = await Promise.all([
+    userQuery.modelQuery.populate('roleRef').lean(),
+    userQuery.getPaginationInfo(),
+  ]);
+
+  return { users, pagination };
+};
+
 // ------------ get all users ------------
 const getAllUsersFromDB = async (query: Record<string, unknown>) => {
   const userQuery = new QueryBuilder(
-    User.find({ isDeleted: false, role: { $ne: UserRole.SuperAdmin } }).select(
-      '+verification',
-    ),
+    User.find({ isDeleted: false, role: { $ne: UserRole.SuperAdmin } }),
     query,
   )
-    .search(['firstName', 'lastName', 'email'])
+    .search(['name', 'username', 'email'])
     .filter()
     .sort()
     .paginate()
@@ -207,5 +253,6 @@ export const UserService = {
   updateProfileToDB,
   updateStatusToDB,
   deleteSingleUserFromDB,
+  getAllCareProvidersFromDB,
   getAllUsersFromDB,
 };

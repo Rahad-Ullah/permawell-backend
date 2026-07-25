@@ -68,9 +68,28 @@ const deleteUserZodSchema = z.object({
     .strict(),
 });
 
+// get single user
+const getSingleUserZodSchema = z.object({
+  params: z.object({
+    id: objectId('user id'),
+  }).strict(),
+});
+
+// get all care providers
+const getAllCareProvidersZodSchema = z.object({
+  query: z
+    .object({
+      searchTerm: z.string().optional(),
+      page: z.string().optional(),
+      limit: z.string().optional(),
+    })
+    .strict(),
+});
+
 export const UserValidation = {
   createUserZodSchema,
   updateUserZodSchema,
   updateStatusZodSchema,
   deleteUserZodSchema,
+  getSingleUserZodSchema,
 };

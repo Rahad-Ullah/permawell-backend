@@ -39,8 +39,8 @@ const loginUserFromDB = async (payload: ILoginData) => {
     );
   }
 
-  //check if user is verified
-  if (!isExistUser.isVerified) {
+  //check if user email is verified
+  if (!isExistUser.isEmailVerified) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       'Please verify your account, then try to login again',
@@ -158,11 +158,11 @@ const verifyEmailToDB = async (payload: IVerifyEmail) => {
   let message;
   let data;
 
-  if (!isExistUser.isVerified) {
+  if (!isExistUser.isEmailVerified) {
     await User.findOneAndUpdate(
       { _id: isExistUser._id },
       {
-        isVerified: true,
+        isEmailVerified: true,
         authentication: { oneTimeCode: null, expireAt: null },
       }
     );

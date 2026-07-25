@@ -18,7 +18,7 @@ const createAdmin = async (payload: IUser & IAdmin): Promise<any> => {
   const { permissions, ...userData } = payload;
 
   userData.role = UserRole.Admin;
-  userData.isVerified = true;
+  userData.isEmailVerified = true;
   userData.status = UserStatus.Active;
 
   const session = await mongoose.startSession();

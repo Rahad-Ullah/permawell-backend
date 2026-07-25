@@ -23,7 +23,6 @@ const userSchema = new Schema<IUser, UserModal>(
     },
     username: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
     },
@@ -56,7 +55,7 @@ const userSchema = new Schema<IUser, UserModal>(
     gender: {
       type: String,
       enum: Object.values(UserGender),
-      default: UserGender.Male,
+      default: null,
     },
     dob: {
       type: Date,
