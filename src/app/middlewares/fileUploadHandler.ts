@@ -178,8 +178,10 @@ const fileUploadHandler = (): RequestHandler => {
         const stringBlacklist = [
           'postalcode',
           'zipcode',
+          'countrycode',
           'phone',
           'phonenumber',
+          'number',
           'id',
         ];
 

@@ -15,6 +15,7 @@ import { NotificationType } from '../notification/notification.constant';
 import { CareProvider } from '../careProvider/careProvider.model';
 import { ICareProvider } from '../careProvider/careProvider.interface';
 import { Wishlist } from '../wishlist/wishlist.model';
+import { calculateDistance } from '../../../utils/calculateDistance';
 
 const createUserToDB = async (payload: Partial<IUser>) => {
   const session = await mongoose.startSession();
@@ -192,13 +193,28 @@ const getAllCareProvidersFromDB = async (
   userId: string,
   query: Record<string, unknown>
 ) => {
-  const filter = {
-    role: UserRole.CareProvider,
-    isDeleted: false,
-    status: UserStatus.Active,
-  } as any;
+  const filter: any = {
+    // role: UserRole.CareProvider,
+    // isDeleted: false,
+    // status: UserStatus.Active,
+  };
 
-  // 1. Pre-filter care provider criteria
+  // 1. Filter by location radius using $near if coordinates are provided
+  const lat = query.lat ? parseFloat(query.lat as string) : null;
+  const lng = query.lng ? parseFloat(query.lng as string) : null;
+  const radiusKm = query.radius ? Number(query.radius) : 200;
+  if (lat !== null && lng !== null) {
+    const EARTH_RADIUS_KM = 6378.1; // Equatorial radius of earth
+    const radiusInRadians = radiusKm / EARTH_RADIUS_KM;
+
+    filter.location = {
+      $geoWithin: {
+        $centerSphere: [[lng, lat], radiusInRadians],
+      },
+    };
+  }
+
+  // 2. Pre-filter care provider criteria
   const careProviderFilter: FilterQuery<ICareProvider> = {};
   if (query.careType) {
     careProviderFilter.careType = query.careType as string;
@@ -215,10 +231,10 @@ const getAllCareProvidersFromDB = async (
     filter.roleRef = { $in: careProviders.map((cp) => cp._id) };
   }
 
-  // 2. Build and execute user query
+  // 3. Build and execute standard user query
   const userQuery = new QueryBuilder(User.find(filter), query)
     .search(['name', 'username', 'email'])
-    .filter(['careType', 'specialty', 'experienceYears'])
+    .filter(['careType', 'specialty', 'experienceYears', 'lat', 'lng', 'radius'])
     .sort()
     .paginate()
     .fields();
@@ -228,12 +244,11 @@ const getAllCareProvidersFromDB = async (
     userQuery.getPaginationInfo(),
   ]);
 
-  // 3. Embed wishlist status efficiently
-  if (userId && users.length > 0) {
-    // Collect all provider IDs (either user._id or roleRef._id based on how you reference providers)
-    const providerIds = users.map((u: any) => u._id);
+  // 4. Batch lookup wishlist status
+  const providerIds = users.map((u: any) => u._id);
+  let wishlistedProviderIds = new Set<string>();
 
-    // Fetch matching wishlist records for the current user
+  if (userId && providerIds.length > 0) {
     const wishlists = await Wishlist.find({
       user: userId,
       careProvider: { $in: providerIds },
@@ -241,27 +256,29 @@ const getAllCareProvidersFromDB = async (
       .select('careProvider')
       .lean();
 
-    // Create a Set for fast lookup O(1)
-    const wishlistedProviderIds = new Set(
+    wishlistedProviderIds = new Set(
       wishlists.map((w) => w.careProvider.toString())
     );
-
-    // Attach isWishlisted status to each provider object
-    const usersWithWishlist = users.map((user: any) => ({
-      ...user,
-      isWishlisted: wishlistedProviderIds.has(user._id.toString()),
-    }));
-
-    return { users: usersWithWishlist, pagination };
   }
 
-  // If no userId is provided, default isWishlisted to false
-  const usersWithWishlist = users.map((user: any) => ({
-    ...user,
-    isWishlisted: false,
-  }));
+  // 5. Format final response output (Embed distance & isWishlisted)
+  const finalUsers = users.map((user: any) => {
+    let distanceInKm: number | null = null;
 
-  return { users: usersWithWishlist, pagination };
+    // Safely extract coordinates from GeoJSON [lng, lat]
+    if (lat !== null && lng !== null && user.location?.coordinates) {
+      const [providerLng, providerLat] = user.location.coordinates;
+      distanceInKm = calculateDistance(lat, lng, providerLat, providerLng);
+    }
+
+    return {
+      ...user,
+      distanceInKm,
+      isWishlisted: wishlistedProviderIds.has(user._id.toString()),
+    };
+  });
+
+  return { users: finalUsers, pagination };
 };
 // ------------ get all users ------------
 const getAllUsersFromDB = async (query: Record<string, unknown>) => {
