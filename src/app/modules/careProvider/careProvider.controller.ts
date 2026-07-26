@@ -3,6 +3,7 @@ import { CareProviderServices } from './careProvider.service';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 import { StatusCodes } from 'http-status-codes';
+import { getMultipleFilesPath } from '../../../shared/getFilePath';
 
 // update care provider
 const updateCareProvider = catchAsync(async (req: Request, res: Response) => {
@@ -16,6 +17,21 @@ const updateCareProvider = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// update gallery
+const updateGallery = catchAsync(async (req: Request, res: Response) => {
+  const uploadedImages = getMultipleFilesPath(req.files, 'image');
+  const removeImages = req.body.removeImages as string[];
+  const result = await CareProviderServices.updateGalleryToDB(req.user.id, { removeImages, newImages: uploadedImages });
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Gallery updated successfully',
+    data: result,
+  });
+});
+
 export const CareProviderController = {
-  updateCareProvider
+  updateCareProvider,
+  updateGallery,
 };

@@ -48,6 +48,7 @@ const updateCareProviderZodSchema = z.object({
 // update gallery validation schema
 const updateGalleryZodSchema = z.object({
   body: z.object({
+    removeImages: z.array(z.string().url()).optional(),
     image: z.any().optional(),
   }).strict()
 });

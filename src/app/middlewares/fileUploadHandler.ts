@@ -98,7 +98,7 @@ const fileUploadHandler = (): RequestHandler => {
       fileSize: 10 * 1024 * 1024, // Optional: set max individual file size limit (e.g., 10MB)
     },
   }).fields([
-    { name: 'image', maxCount: 5 },
+    { name: 'image', maxCount: 10 },
     { name: 'media', maxCount: 3 },
     { name: 'doc', maxCount: 3 },
   ]);

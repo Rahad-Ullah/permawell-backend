@@ -4,6 +4,7 @@ import validateRequest from '../../middlewares/validateRequest';
 import { CareProviderValidations } from './careProvider.validation';
 import { CareProviderController } from './careProvider.controller';
 import auth from '../../middlewares/auth';
+import fileUploadHandler from '../../middlewares/fileUploadHandler';
 
 const router = express.Router();
 
@@ -13,6 +14,15 @@ router.patch(
     auth(UserRole.CareProvider),
     validateRequest(CareProviderValidations.updateCareProviderZodSchema),
     CareProviderController.updateCareProvider
+)
+
+// update gallery
+router.patch(
+    "/gallery",
+    auth(UserRole.CareProvider),
+    fileUploadHandler(),
+    validateRequest(CareProviderValidations.updateGalleryZodSchema),
+    CareProviderController.updateGallery
 )
 
 export const careProviderRoutes = router;
