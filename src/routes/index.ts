@@ -10,6 +10,7 @@ import { transactionRoutes } from '../app/modules/transaction/transaction.route'
 import { adminRoutes } from '../app/modules/admin/admin.route';
 import { walletRoutes } from '../app/modules/wallet/wallet.route';
 import { careProviderRoutes } from '../app/modules/careProvider/careProvider.route';
+import { reviewRoutes } from '../app/modules/review/review.route';
 const router = express.Router();
 
 const apiRoutes: { path: string; route: any }[] = [
@@ -30,16 +31,20 @@ const apiRoutes: { path: string; route: any }[] = [
     route: AuthRoutes,
   },
   {
+    path: '/wishlists',
+    route: wishlistRoutes,
+  },
+  {
+    path: '/reviews',
+    route: reviewRoutes,
+  },
+  {
     path: '/transactions',
     route: transactionRoutes,
   },
   {
     path: '/wallets',
     route: walletRoutes,
-  },
-  {
-    path: '/wishlists',
-    route: wishlistRoutes,
   },
   {
     path: '/newsletters',
