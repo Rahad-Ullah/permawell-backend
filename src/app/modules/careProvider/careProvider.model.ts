@@ -53,6 +53,8 @@ const careProviderSchema = new Schema<ICareProvider, CareProviderModel>(
     licenseNumber: { type: String, default: '' },
     isKycVerified: { type: Boolean, default: false },
     experienceYears: { type: Number, default: 0 },
+    averageRating: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 },
     timezone: { type: String, default: '' },
     availabilities: { type: [AvailabilitySchema], default: [] },
     contactInfo: { type: ContactInfoSchema },

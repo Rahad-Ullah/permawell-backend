@@ -12,6 +12,8 @@ export interface ICareProvider {
   licenseNumber: string;
   isKycVerified: boolean;
   experienceYears: number;
+  averageRating: number;
+  totalReviews: number;
   timezone: string;
   availabilities: {
     workplaceType: WorkPlaceType;
