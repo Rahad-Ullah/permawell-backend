@@ -9,6 +9,7 @@ import { settingRoutes } from '../app/modules/setting/setting.route';
 import { transactionRoutes } from '../app/modules/transaction/transaction.route';
 import { adminRoutes } from '../app/modules/admin/admin.route';
 import { walletRoutes } from '../app/modules/wallet/wallet.route';
+import { careProviderRoutes } from '../app/modules/careProvider/careProvider.route';
 const router = express.Router();
 
 const apiRoutes: { path: string; route: any }[] = [
@@ -19,6 +20,10 @@ const apiRoutes: { path: string; route: any }[] = [
   {
     path: '/admins',
     route: adminRoutes,
+  },
+  {
+    path: '/care-providers',
+    route: careProviderRoutes,
   },
   {
     path: '/auth',

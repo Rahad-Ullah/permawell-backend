@@ -27,22 +27,32 @@ const ContactInfoSchema = z.object({
   facebook: z.string().optional(),
   twitter: z.string().optional(),
   instagram: z.string().optional(),
+}).strict();
+
+// update care provider validation schema
+const updateCareProviderZodSchema = z.object({
+  body: z.object({
+    specialty: z.string().optional(),
+    specialistTitle: z.string().optional(),
+    careType: z.nativeEnum(CareType).optional(),
+    serviceOverview: z.string().optional(),
+    workplace: z.string().optional(),
+    licenseNumber: z.string().optional(),
+    experienceYears: z.number().optional(),
+    timezone: z.string().optional(),
+    availabilities: z.array(AvailabilitySchema).optional(),
+    contactInfo: ContactInfoSchema.optional(),
+  }).strict()
 });
 
-const updateCareProviderZodSchema = z.object({
-  specialty: z.string().optional(),
-  specialistTitle: z.string().optional(),
-  careType: z.nativeEnum(CareType).optional(),
-  serviceOverview: z.string().optional(),
-  workplace: z.string().optional(),
-  licenseNumber: z.string().optional(),
-  experienceYears: z.number().optional(),
-  timezone: z.string().optional(),
-  availabilities: z.array(AvailabilitySchema).optional(),
-  contactInfo: ContactInfoSchema.optional(),
-  gallery: z.array(z.string()).optional(),
+// update gallery validation schema
+const updateGalleryZodSchema = z.object({
+  body: z.object({
+    image: z.any().optional(),
+  }).strict()
 });
 
 export const CareProviderValidations = {
-  updateCareProviderZodSchema
+  updateCareProviderZodSchema,
+  updateGalleryZodSchema
 };
