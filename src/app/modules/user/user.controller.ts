@@ -98,7 +98,7 @@ const getMyKyc = catchAsync(async (req: Request, res: Response) => {
 
 // get all providers
 const getAllProviders = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.getAllCareProvidersFromDB(req.query);
+  const result = await UserService.getAllCareProvidersFromDB(req.user.id as string, req.query);
 
   sendResponse(res, {
     success: true,

@@ -14,6 +14,7 @@ import { sendNotifications } from '../../../helpers/notificationHelper';
 import { NotificationType } from '../notification/notification.constant';
 import { CareProvider } from '../careProvider/careProvider.model';
 import { ICareProvider } from '../careProvider/careProvider.interface';
+import { Wishlist } from '../wishlist/wishlist.model';
 
 const createUserToDB = async (payload: Partial<IUser>) => {
   const session = await mongoose.startSession();
@@ -90,7 +91,7 @@ const createUserToDB = async (payload: Partial<IUser>) => {
 };
 
 const getSingleUserFromDB = async (id: string): Promise<Partial<IUser>> => {
-  const user = await User.isExistUserById(id);
+  const user = await User.findById(id).populate('roleRef');
   if (!user) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
@@ -187,11 +188,18 @@ const getKycByUserIdFromDB = async (id: string): Promise<Partial<IUser>> => {
 };
 
 // ------------ get all care providers ------------
-const getAllCareProvidersFromDB = async (query: Record<string, unknown>) => {
-  const filter = { role: UserRole.CareProvider, isDeleted: false, status: UserStatus.Active } as any;
+const getAllCareProvidersFromDB = async (
+  userId: string,
+  query: Record<string, unknown>
+) => {
+  const filter = {
+    role: UserRole.CareProvider,
+    isDeleted: false,
+    status: UserStatus.Active,
+  } as any;
 
-  // pre-filter care provider
-  const careProviderFilter: FilterQuery<ICareProvider> = {}
+  // 1. Pre-filter care provider criteria
+  const careProviderFilter: FilterQuery<ICareProvider> = {};
   if (query.careType) {
     careProviderFilter.careType = query.careType as string;
   }
@@ -204,13 +212,11 @@ const getAllCareProvidersFromDB = async (query: Record<string, unknown>) => {
 
   if (Object.keys(careProviderFilter).length > 0) {
     const careProviders = await CareProvider.find(careProviderFilter).select('_id');
-    filter.roleRef = { $in: careProviders.map(cp => cp._id) };
+    filter.roleRef = { $in: careProviders.map((cp) => cp._id) };
   }
 
-  const userQuery = new QueryBuilder(
-    User.find(filter),
-    query,
-  )
+  // 2. Build and execute user query
+  const userQuery = new QueryBuilder(User.find(filter), query)
     .search(['name', 'username', 'email'])
     .filter(['careType', 'specialty', 'experienceYears'])
     .sort()
@@ -222,9 +228,41 @@ const getAllCareProvidersFromDB = async (query: Record<string, unknown>) => {
     userQuery.getPaginationInfo(),
   ]);
 
-  return { users, pagination };
-};
+  // 3. Embed wishlist status efficiently
+  if (userId && users.length > 0) {
+    // Collect all provider IDs (either user._id or roleRef._id based on how you reference providers)
+    const providerIds = users.map((u: any) => u._id);
 
+    // Fetch matching wishlist records for the current user
+    const wishlists = await Wishlist.find({
+      user: userId,
+      careProvider: { $in: providerIds },
+    })
+      .select('careProvider')
+      .lean();
+
+    // Create a Set for fast lookup O(1)
+    const wishlistedProviderIds = new Set(
+      wishlists.map((w) => w.careProvider.toString())
+    );
+
+    // Attach isWishlisted status to each provider object
+    const usersWithWishlist = users.map((user: any) => ({
+      ...user,
+      isWishlisted: wishlistedProviderIds.has(user._id.toString()),
+    }));
+
+    return { users: usersWithWishlist, pagination };
+  }
+
+  // If no userId is provided, default isWishlisted to false
+  const usersWithWishlist = users.map((user: any) => ({
+    ...user,
+    isWishlisted: false,
+  }));
+
+  return { users: usersWithWishlist, pagination };
+};
 // ------------ get all users ------------
 const getAllUsersFromDB = async (query: Record<string, unknown>) => {
   const userQuery = new QueryBuilder(
