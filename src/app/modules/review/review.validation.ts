@@ -28,10 +28,17 @@ const deleteReviewSchema = z.object({
   }).strict(),
 });
 
-// get review by user id
-const getReviewByUserIdSchema = z.object({
+// get review by reviewer id
+const getReviewByReviewerIdSchema = z.object({
   params: z.object({
-    id: objectId('User ID'),
+    id: objectId('Reviewer ID'),
+  }).strict(),
+});
+
+// get review by care provider id
+const getReviewsByCareProviderIdSchema = z.object({
+  params: z.object({
+    id: objectId('Care Provider ID'),
   }).strict(),
 });
 
@@ -40,5 +47,6 @@ export const ReviewValidations = {
   createReviewSchema,
   updateReviewSchema,
   deleteReviewSchema,
-  getReviewByUserIdSchema,
+  getReviewByReviewerIdSchema,
+  getReviewsByCareProviderIdSchema,
 };

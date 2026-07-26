@@ -15,4 +15,35 @@ router.post(
     ReviewController.createReview
 );
 
+// update review
+router.patch(
+    '/:id',
+    auth(UserRole.CareSeeker),
+    validateRequest(ReviewValidations.updateReviewSchema),
+    ReviewController.updateReview
+);
+
+// delete review
+router.delete(
+    '/:id',
+    auth(UserRole.CareSeeker),
+    validateRequest(ReviewValidations.deleteReviewSchema),
+    ReviewController.deleteReview
+);
+
+// get review by id
+router.get(
+    '/reviewer/me',
+    auth(UserRole.CareSeeker),
+    ReviewController.getReviewByReviewerId
+);
+
+// get review by care provider id
+router.get(
+    '/care-provider/:id',
+    auth(UserRole.CareSeeker, UserRole.CareProvider),
+    validateRequest(ReviewValidations.getReviewsByCareProviderIdSchema),
+    ReviewController.getReviewsByCareProviderId
+);
+
 export const reviewRoutes = router;

@@ -19,7 +19,61 @@ const createReview = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// update review
+const updateReview = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReviewServices.updateReview(req.params.id, req.body);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Review updated successfully',
+    data: result,
+  });
+});
+
+// delete review
+const deleteReview = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReviewServices.deleteReview(req.params.id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Review deleted successfully',
+    data: result,
+  });
+});
+
+// get review by id
+const getReviewByReviewerId = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReviewServices.getReviewByReviewerId(req.user.id, req.query);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Review fetched successfully',
+    data: result.data,
+    pagination: result.pagination
+  });
+});
+
+// get review by care provider id
+const getReviewsByCareProviderId = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReviewServices.getReviewsByCareProviderId(req.params.id, req.query);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Review fetched successfully',
+    data: result.data,
+    pagination: result.pagination
+  });
+});
+
 
 export const ReviewController = {
   createReview,
+  updateReview,
+  deleteReview,
+  getReviewByReviewerId,
+  getReviewsByCareProviderId,
 };
