@@ -47,47 +47,67 @@ const fileUploadHandler = (): RequestHandler => {
   // 2. Use Memory Storage instead of Disk Storage
   const storage = multer.memoryStorage();
 
-  // 3. File Filter Strategy
+  // 3. Defined allowed MIME types as Sets for faster and cleaner lookups
+  const ALLOWED_IMAGE_TYPES = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/jpg',
+    'image/heic',
+    'image/heif',
+    'image/heic-sequence',
+    'image/heif-sequence',
+  ]);
+
+  const ALLOWED_MEDIA_TYPES = new Set(['video/mp4', 'audio/mpeg']);
+
+  const ALLOWED_DOC_TYPES = new Set(['application/pdf']);
+
   const fileFilter = (
     req: Request,
     file: Express.Multer.File,
     cb: FileFilterCallback,
   ) => {
-    if (file.fieldname === 'image') {
-      if (['image/jpeg', 'image/png', 'image/jpg'].includes(file.mimetype)) {
-        cb(null, true);
-      } else {
-        cb(
+    switch (file.fieldname) {
+      case 'image':
+        if (ALLOWED_IMAGE_TYPES.has(file.mimetype.toLowerCase())) {
+          return cb(null, true);
+        }
+        return cb(
           new ApiError(
             StatusCodes.BAD_REQUEST,
-            'Only .jpeg, .png, .jpg file supported',
+            'Only .jpeg, .png, .jpg, .heic, and .heics files are supported!',
           ),
         );
-      }
-    } else if (file.fieldname === 'media') {
-      if (['video/mp4', 'audio/mpeg'].includes(file.mimetype)) {
-        cb(null, true);
-      } else {
-        cb(
+
+      case 'media':
+        if (ALLOWED_MEDIA_TYPES.has(file.mimetype.toLowerCase())) {
+          return cb(null, true);
+        }
+        return cb(
           new ApiError(
             StatusCodes.BAD_REQUEST,
-            'Only .mp4, .mp3, file supported',
+            'Only .mp4 and .mp3 files are supported!',
           ),
         );
-      }
-    } else if (file.fieldname === 'doc') {
-      if (file.mimetype === 'application/pdf') {
-        cb(null, true);
-      } else {
-        cb(new ApiError(StatusCodes.BAD_REQUEST, 'Only pdf supported'));
-      }
-    } else {
-      cb(
-        new ApiError(
-          StatusCodes.BAD_REQUEST,
-          'This file field is not supported',
-        ),
-      );
+
+      case 'doc':
+        if (ALLOWED_DOC_TYPES.has(file.mimetype.toLowerCase())) {
+          return cb(null, true);
+        }
+        return cb(
+          new ApiError(
+            StatusCodes.BAD_REQUEST,
+            'Only .pdf files are supported!',
+          ),
+        );
+
+      default:
+        return cb(
+          new ApiError(
+            StatusCodes.BAD_REQUEST,
+            `The field '${file.fieldname}' is not a recognized file upload field!`,
+          ),
+        );
     }
   };
 
