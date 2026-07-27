@@ -13,6 +13,7 @@ export default {
   backend_url: process.env.BACKEND_URL,
   logo_url: process.env.LOGO_URL,
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
+  crypto_secret: process.env.CRYPTO_SECRET,
   jwt: {
     jwt_secret: process.env.JWT_SECRET,
     jwt_expire_in: process.env.JWT_EXPIRE_IN,
