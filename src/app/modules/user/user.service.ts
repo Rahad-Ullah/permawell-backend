@@ -194,9 +194,9 @@ const getAllCareProvidersFromDB = async (
   query: Record<string, unknown>
 ) => {
   const filter: any = {
-    // role: UserRole.CareProvider,
-    // isDeleted: false,
-    // status: UserStatus.Active,
+    role: UserRole.CareProvider,
+    isDeleted: false,
+    status: UserStatus.Active,
   };
 
   // 1. Filter by location radius using $near if coordinates are provided
