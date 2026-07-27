@@ -17,6 +17,11 @@ router.post(
 );
 
 // get messages by chat id
-router.get('/chat/:chatId', auth(), MessageController.getChatMessages);
+router.get(
+  '/chat/:chatId',
+  auth(),
+  validateRequest(MessageValidations.getChatMessagesSchema),
+  MessageController.getChatMessages
+);
 
 export const MessageRoutes = router;

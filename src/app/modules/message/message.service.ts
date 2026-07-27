@@ -27,17 +27,18 @@ export const createMessage = async (payload: IMessage): Promise<IMessage> => {
   payload.seenBy = [payload.sender];
 
   const result = await Message.create(payload);
+  const populatedResult = await result.populate('sender', 'name image isDeleted');
 
   // emit socket event for new message
   //@ts-ignore
   const io = global.io;
   if (io) {
     // 🔔 emit message to chat room
-    io.to(`chat:${payload.chat}`).emit('getMessage', result);
+    io.to(`chat:${payload.chat}`).emit('getMessage', populatedResult);
 
     // 🔔 emit chat list update per participant
     isChatExist.participants.forEach(userId => {
-      io.to(`user:${userId.toString()}`).emit('getChatList', result);
+      io.to(`user:${userId.toString()}`).emit('getChatList', populatedResult);
     });
   }
 
