@@ -11,6 +11,8 @@ import { adminRoutes } from '../app/modules/admin/admin.route';
 import { walletRoutes } from '../app/modules/wallet/wallet.route';
 import { careProviderRoutes } from '../app/modules/careProvider/careProvider.route';
 import { reviewRoutes } from '../app/modules/review/review.route';
+import { ChatRoutes } from '../app/modules/chat/chat.route';
+import { MessageRoutes } from '../app/modules/message/message.route';
 const router = express.Router();
 
 const apiRoutes: { path: string; route: any }[] = [
@@ -37,6 +39,14 @@ const apiRoutes: { path: string; route: any }[] = [
   {
     path: '/reviews',
     route: reviewRoutes,
+  },
+  {
+    path: '/chats',
+    route: ChatRoutes,
+  },
+  {
+    path: '/messages',
+    route: MessageRoutes,
   },
   {
     path: '/transactions',

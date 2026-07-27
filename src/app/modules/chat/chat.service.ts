@@ -7,7 +7,7 @@ import { Message } from '../message/message.model';
 import { IMessage } from '../message/message.interface';
 
 // ---------------- create chat ----------------
-export const createChatIntoDB = async (user: JwtPayload, payload: IChat) => {
+const createChatIntoDB = async (user: JwtPayload, payload: IChat) => {
   const participants = [...payload.participants];
   // push the user id to participants if not already included
   if (!participants.includes(user.id)) {
@@ -17,6 +17,7 @@ export const createChatIntoDB = async (user: JwtPayload, payload: IChat) => {
   // create chat if it does not exist
   const isExist = await Chat.findOne({
     participants: { $all: participants },
+    isDeleted: false
   }).lean();
   if (isExist) {
     return isExist;
@@ -74,7 +75,7 @@ const getMyChatsFromDB = async (
   user: JwtPayload,
   query: Record<string, any>
 ) => {
-  const chats = await Chat.find({ participants: { $in: [user.id] } })
+  const chats = await Chat.find({ participants: { $in: [user.id] }, isDeleted: false })
     .populate({
       path: 'participants',
       select: 'name image isDeleted',

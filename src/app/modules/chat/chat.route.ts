@@ -15,12 +15,22 @@ router.post(
 );
 
 // delete chat
-router.delete('/:id', auth(), ChatController.deleteChat);
+router.delete(
+  '/:id',
+  auth(),
+  validateRequest(ChatValidations.deleteChatValidation),
+  ChatController.deleteChat
+);
 
 // get single chat
-router.get('/:id', auth(), ChatController.getSingleChat);
+router.get(
+  '/single/:id',
+  auth(),
+  validateRequest(ChatValidations.getSingleChatValidation),
+  ChatController.getSingleChat
+);
 
 // get my chats
-router.get('/', auth(), ChatController.getMyChats);
+router.get('/me', auth(), ChatController.getMyChats);
 
 export const ChatRoutes = router;
