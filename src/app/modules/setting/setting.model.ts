@@ -43,7 +43,17 @@ const settingSchema = new Schema<ISetting, SettingModel>({
       },
     },
   },
-  socialLinks: {
+  mobileAppLink: {
+    googlePlay: {
+      type: String,
+      default: '',
+    },
+    appleStore: {
+      type: String,
+      default: '',
+    },
+  },
+  socialLink: {
     facebook: {
       type: String,
       default: '',

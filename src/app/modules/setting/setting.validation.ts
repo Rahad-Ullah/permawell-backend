@@ -29,7 +29,14 @@ const updateSettingValidation = z.object({
         })
         .strict()
         .optional(),
-      socialLinks: z
+      mobileAppLink: z
+        .object({
+          googlePlay: z.string().url().or(z.literal('')).optional(),
+          appleStore: z.string().url().or(z.literal('')).optional(),
+        })
+        .strict()
+        .optional(),
+      socialLink: z
         .object({
           facebook: z.string().url().or(z.literal('')).optional(),
           instagram: z.string().url().or(z.literal('')).optional(),

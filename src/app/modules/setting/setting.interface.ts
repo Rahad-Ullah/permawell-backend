@@ -18,7 +18,11 @@ export interface ISetting {
       coordinates: [number, number];
     };
   };
-  socialLinks: {
+  mobileAppLink: {
+    googlePlay: string;
+    appleStore: string;
+  }
+  socialLink: {
     facebook: string;
     instagram: string;
     twitter: string;
