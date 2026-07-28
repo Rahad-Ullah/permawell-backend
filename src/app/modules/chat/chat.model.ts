@@ -20,4 +20,7 @@ const chatSchema = new Schema<IChat, ChatModel>(
   }
 );
 
+// indexes
+chatSchema.index({ participants: 1 });
+
 export const Chat = model<IChat, ChatModel>('Chat', chatSchema);

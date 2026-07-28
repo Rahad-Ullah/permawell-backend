@@ -46,7 +46,7 @@ const deleteChatFromDB = async (chatId: string) => {
 const getSingleChatFromDB = async (chatId: string, userId: string) => {
   const result = await Chat.findById(chatId).populate(
     'participants',
-    'name image'
+    'name image isOnline'
   );
 
   // check if the user is a participant
@@ -78,7 +78,7 @@ const getMyChatsFromDB = async (
   const chats = await Chat.find({ participants: { $in: [user.id] }, isDeleted: false })
     .populate({
       path: 'participants',
-      select: 'name image isDeleted',
+      select: 'name image isOnline isDeleted',
       match: {
         // isDeleted: false,
         _id: { $ne: user.id }, // Exclude the current user from the populated participants
@@ -104,7 +104,7 @@ const getMyChatsFromDB = async (
         chat: chat?._id,
       })
         .sort({ createdAt: -1 })
-        .select('text image createdAt sender');
+        .select('sender type content isDeleted createdAt');
 
       // find unread messages count
       const unreadCount = await Message.countDocuments({
