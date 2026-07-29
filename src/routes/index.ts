@@ -13,6 +13,7 @@ import { careProviderRoutes } from '../app/modules/careProvider/careProvider.rou
 import { reviewRoutes } from '../app/modules/review/review.route';
 import { ChatRoutes } from '../app/modules/chat/chat.route';
 import { MessageRoutes } from '../app/modules/message/message.route';
+import { supportRoutes } from '../app/modules/support/support.route';
 const router = express.Router();
 
 const apiRoutes: { path: string; route: any }[] = [
@@ -63,6 +64,10 @@ const apiRoutes: { path: string; route: any }[] = [
   {
     path: '/notifications',
     route: notificationRoutes,
+  },
+  {
+    path: '/supports',
+    route: supportRoutes,
   },
   {
     path: '/disclaimers',

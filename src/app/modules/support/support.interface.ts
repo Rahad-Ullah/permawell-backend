@@ -3,6 +3,7 @@ import { SupportStatus, SupportType } from './support.constants';
 
 export interface ISupport {
   _id: Types.ObjectId;
+  user: Types.ObjectId;
   type: SupportType;
   title: string;
   message: string;

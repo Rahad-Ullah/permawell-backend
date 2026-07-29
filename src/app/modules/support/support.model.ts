@@ -3,6 +3,11 @@ import { ISupport, SupportModel } from './support.interface';
 import { SupportStatus, SupportType } from './support.constants';
 
 const supportSchema = new Schema<ISupport, SupportModel>({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
   type: {
     type: String,
     enum: Object.values(SupportType),
@@ -23,7 +28,7 @@ const supportSchema = new Schema<ISupport, SupportModel>({
   phone: {
     type: String,
     trim: true,
-    match: /^[0-9]+$/,
+    default: ""
   },
   status: {
     type: String,
