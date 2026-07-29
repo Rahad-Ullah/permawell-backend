@@ -21,25 +21,25 @@ const createSupportSchema = z.object({
       message: 'Message must be at least 10 characters long',
     }),
     phone: z.string().optional().or(z.literal(null)).or(z.literal(''))
-  })
-});
+  }).strict()
+})
 
 // update support ticket status
 const updateSupportSchema = z.object({
   params: z.object({
     id: objectId('Support ID')
-  }),
+  }).strict(),
   body: z.object({
     status: z.enum([SupportStatus.InProgress, SupportStatus.Resolved, SupportStatus.Closed]).optional(),
-  })
-});
+  }).strict()
+})
 
 // get single support ticket
 const getSingleSupportSchema = z.object({
   params: z.object({
     id: objectId('Support ID')
-  })
-});
+  }).strict()
+})
 
 export const SupportValidations = {
   createSupportSchema,

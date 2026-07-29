@@ -15,4 +15,34 @@ router.post(
     SupportController.createSupport
 );
 
+// update support ticket
+router.patch(
+    '/:id',
+    auth(UserRole.Admin, UserRole.SuperAdmin),
+    validateRequest(SupportValidations.updateSupportSchema),
+    SupportController.updateSupport
+)
+
+// get single support ticket
+router.get(
+    '/single/:id',
+    auth(UserRole.CareProvider, UserRole.CareSeeker, UserRole.Admin, UserRole.SuperAdmin),
+    validateRequest(SupportValidations.getSingleSupportSchema),
+    SupportController.getSingleById
+)
+
+// get by user id
+router.get(
+    '/my-tickets',
+    auth(UserRole.CareProvider, UserRole.CareSeeker),
+    SupportController.getByUserId
+)
+
+// get all support tickets
+router.get(
+    '/',
+    auth(UserRole.Admin, UserRole.SuperAdmin),
+    SupportController.getAllSupports
+)
+
 export const supportRoutes = router;

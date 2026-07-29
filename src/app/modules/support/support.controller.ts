@@ -16,6 +16,60 @@ const createSupport = catchAsync(async (req: Request, res: Response) => {
   });
 })
 
+// update support
+const updateSupport = catchAsync(async (req: Request, res: Response) => {
+  const result = await SupportServices.updateSupport(req.params.id, req.body);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Support ticket updated successfully",
+    data: result,
+  });
+})
+
+// get single support
+const getSingleById = catchAsync(async (req: Request, res: Response) => {
+  const result = await SupportServices.getSingleById(req.params.id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Support ticket fetched successfully",
+    data: result,
+  });
+})
+
+// get by user id
+const getByUserId = catchAsync(async (req: Request, res: Response) => {
+  const result = await SupportServices.getByUserId(req.user.id, req.query);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Support tickets fetched successfully",
+    data: result.data,
+    pagination: result.pagination
+  });
+})
+
+// get all supports
+const getAllSupports = catchAsync(async (req: Request, res: Response) => {
+  const result = await SupportServices.getAllSupports(req.query);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Support tickets fetched successfully",
+    data: result.data,
+    pagination: result.pagination
+  });
+})
+
 export const SupportController = {
   createSupport,
+  updateSupport,
+  getSingleById,
+  getByUserId,
+  getAllSupports
 };
