@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CareType, WorkPlaceType } from './careProvider.constants';
+import { objectId } from '../../../shared/objectIdValidator';
 
 // update care provider validation
 const WeeklyScheduleSchema = z.object({
@@ -53,7 +54,18 @@ const updateGalleryZodSchema = z.object({
   }).strict()
 });
 
+// get availability
+const getAvailabilityZodSchema = z.object({
+  query: z.object({
+    providerId: objectId('Care Provider ID'),
+    date: z.string().date(),
+    workplaceType: z.nativeEnum(WorkPlaceType),
+    timezone: z.string().nonempty(),
+  })
+});
+
 export const CareProviderValidations = {
   updateCareProviderZodSchema,
-  updateGalleryZodSchema
+  updateGalleryZodSchema,
+  getAvailabilityZodSchema
 };

@@ -25,4 +25,12 @@ router.patch(
     CareProviderController.updateGallery
 )
 
+// get availability
+router.get(
+    '/availability',
+    auth(UserRole.CareSeeker),
+    validateRequest(CareProviderValidations.getAvailabilityZodSchema),
+    CareProviderController.getAvailability
+)
+
 export const careProviderRoutes = router;

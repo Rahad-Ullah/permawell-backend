@@ -31,7 +31,25 @@ const updateGallery = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// get provider availability
+const getAvailability = catchAsync(async (req: Request, res: Response) => {
+  const { providerId, date, workplaceType, timezone } = req.query;
+  const result = await CareProviderServices.getAvailability(
+    providerId as string,
+    date as string,
+    workplaceType as string,
+    timezone as string
+  );
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Availability fetched successfully',
+    data: result,
+  });
+});
+
 export const CareProviderController = {
   updateCareProvider,
   updateGallery,
+  getAvailability,
 };

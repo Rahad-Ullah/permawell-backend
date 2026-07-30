@@ -3,6 +3,7 @@ import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { CareProvider } from './careProvider.model';
 import deleteS3File from '../../../shared/deleteS3File';
+import { DateTime } from 'luxon';
 
 // ----------------- update care provider -----------------
 const updateCareProviderToDB = async (
@@ -83,7 +84,104 @@ const updateGalleryToDB = async (
   return careProvider;
 };
 
+// ------------------ get care provider availability -------------------
+// Utility helper to convert "HH:mm" string into total minutes from midnight
+const timeToMinutes = (timeStr: string): number => {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+export const getAvailability = async (
+  providerId: string,
+  dateStr: string,        // e.g., "2026-07-30"
+  workplaceType: string,  // e.g., "ONLINE" or "CLINIC"
+  userTimezone: string    // e.g., "Asia/Tokyo" or "America/New_York"
+) => {
+  // 1. Fetch Care Provider
+  const careProvider = await CareProvider.findById(providerId);
+  if (!careProvider) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "Care provider doesn't exist!");
+  }
+
+  // 2. Locate requested workplace availability config
+  const availabilityConfig = careProvider.availabilities.find(
+    (a) => a.workplaceType === workplaceType && a.isAvailable
+  );
+
+  if (!availabilityConfig || !availabilityConfig.weeklySchedules.length) {
+    return []; // No active schedules for this workplace type
+  }
+
+  // 3. Define User's local day range in UTC
+  // Parse YYYY-MM-DD in the user's time zone
+  const userStartOfDay = DateTime.fromISO(dateStr, { zone: userTimezone }).startOf('day');
+  const userEndOfDay = userStartOfDay.endOf('day');
+
+  if (!userStartOfDay.isValid) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "Invalid date format or timezone!");
+  }
+
+  // 4. Generate all 30-minute candidate slots across the user's day
+  const SLOT_DURATION_MINUTES = 30;
+  const availableSlots: { startTime: string; endTime: string }[] = [];
+
+  let currentSlotStart = userStartOfDay;
+
+  while (currentSlotStart < userEndOfDay) {
+    const currentSlotEnd = currentSlotStart.plus({ minutes: SLOT_DURATION_MINUTES });
+
+    // If the 30-min slot spills past the user's local day end, stop
+    if (currentSlotEnd > userEndOfDay) break;
+
+    // 5. Convert candidate slot into the Provider's local timezone
+    const providerSlotStart = currentSlotStart.setZone(careProvider.timezone);
+    const providerSlotEnd = currentSlotEnd.setZone(careProvider.timezone);
+
+    // Get the provider's day of the week (e.g., "Monday", "Tuesday")
+    const providerDayOfWeek = providerSlotStart.toFormat('EEEE');
+
+    // Find provider availability rule for this specific weekday
+    const daySchedule = availabilityConfig.weeklySchedules.find(
+      (s) => s.dayOfWeek.toLowerCase() === providerDayOfWeek.toLowerCase()
+    );
+
+    if (daySchedule) {
+      // Calculate minutes from midnight in provider's local time
+      const slotStartMinutes = providerSlotStart.hour * 60 + providerSlotStart.minute;
+      const slotEndMinutes = providerSlotEnd.hour * 60 + providerSlotEnd.minute;
+
+      const scheduleStartMinutes = timeToMinutes(daySchedule.startTime);
+      let scheduleEndMinutes = timeToMinutes(daySchedule.endTime);
+
+      // Handle overnight shift edge-case (e.g., 22:00 to 02:00)
+      if (scheduleEndMinutes <= scheduleStartMinutes) {
+        scheduleEndMinutes += 24 * 60;
+      }
+
+      // 6. Check if slot falls completely within provider working hours
+      const isWithinWorkingHours =
+        slotStartMinutes >= scheduleStartMinutes &&
+        slotEndMinutes <= scheduleEndMinutes;
+
+      if (isWithinWorkingHours) {
+        availableSlots.push({
+          startTime: currentSlotStart.toUTC().toISO(), // ISO format with UTC timezone
+          endTime: currentSlotEnd.toUTC().toISO(),
+        });
+      }
+    }
+
+    // Move to next 30-minute increment
+    currentSlotStart = currentSlotEnd;
+  }
+
+  // TODO: Filter out already booked slots from the Appointment database collection here
+
+  return availableSlots;
+};
+
 export const CareProviderServices = {
   updateCareProviderToDB,
-  updateGalleryToDB
+  updateGalleryToDB,
+  getAvailability,
 };
