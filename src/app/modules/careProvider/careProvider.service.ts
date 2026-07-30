@@ -85,97 +85,89 @@ const updateGalleryToDB = async (
 };
 
 // ------------------ get care provider availability -------------------
-// Utility helper to convert "HH:mm" string into total minutes from midnight
-const timeToMinutes = (timeStr: string): number => {
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  return hours * 60 + minutes;
-};
-
 export const getAvailability = async (
   providerId: string,
-  dateStr: string,        // e.g., "2026-07-30"
-  workplaceType: string,  // e.g., "ONLINE" or "CLINIC"
-  userTimezone: string    // e.g., "Asia/Tokyo" or "America/New_York"
+  dateStr: string,
+  workplaceType: string,
+  userTimezone: string
 ) => {
-  // 1. Fetch Care Provider
+  // 1. Fetch provider
   const careProvider = await CareProvider.findById(providerId);
   if (!careProvider) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "Care provider doesn't exist!");
   }
 
-  // 2. Locate requested workplace availability config
-  const availabilityConfig = careProvider.availabilities.find(
+  // 2. Locate workplace schedule config
+  const scheduleConfig = careProvider.availabilities.find(
     (a) => a.workplaceType === workplaceType && a.isAvailable
   );
 
-  if (!availabilityConfig || !availabilityConfig.weeklySchedules.length) {
-    return []; // No active schedules for this workplace type
+  if (!scheduleConfig?.weeklySchedules?.length) {
+    return [];
   }
 
-  // 3. Define User's local day range in UTC
-  // Parse YYYY-MM-DD in the user's time zone
+  // 3. Define user's local day boundaries (00:00:00 to 23:59:59)
   const userStartOfDay = DateTime.fromISO(dateStr, { zone: userTimezone }).startOf('day');
   const userEndOfDay = userStartOfDay.endOf('day');
 
   if (!userStartOfDay.isValid) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "Invalid date format or timezone!");
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid date format or timezone!');
   }
 
-  // 4. Generate all 30-minute candidate slots across the user's day
+  // 4. Generate 30-minute candidate slots
   const SLOT_DURATION_MINUTES = 30;
-  const availableSlots: { startTime: string; endTime: string }[] = [];
 
+  const availableSlots: { startTime: string; endTime: string }[] = [];
   let currentSlotStart = userStartOfDay;
 
   while (currentSlotStart < userEndOfDay) {
     const currentSlotEnd = currentSlotStart.plus({ minutes: SLOT_DURATION_MINUTES });
-
-    // If the 30-min slot spills past the user's local day end, stop
     if (currentSlotEnd > userEndOfDay) break;
 
-    // 5. Convert candidate slot into the Provider's local timezone
+    // A. Check what day/time this slot corresponds to in the provider's timezone
     const providerSlotStart = currentSlotStart.setZone(careProvider.timezone);
-    const providerSlotEnd = currentSlotEnd.setZone(careProvider.timezone);
+    const dayOfWeek = providerSlotStart.toFormat('EEEE');
 
-    // Get the provider's day of the week (e.g., "Monday", "Tuesday")
-    const providerDayOfWeek = providerSlotStart.toFormat('EEEE');
-
-    // Find provider availability rule for this specific weekday
-    const daySchedule = availabilityConfig.weeklySchedules.find(
-      (s) => s.dayOfWeek.toLowerCase() === providerDayOfWeek.toLowerCase()
+    // B. Find provider schedule for this day
+    const daySchedule = scheduleConfig.weeklySchedules.find(
+      (s) => s.dayOfWeek.toLowerCase() === dayOfWeek.toLowerCase()
     );
 
     if (daySchedule) {
-      // Calculate minutes from midnight in provider's local time
-      const slotStartMinutes = providerSlotStart.hour * 60 + providerSlotStart.minute;
-      const slotEndMinutes = providerSlotEnd.hour * 60 + providerSlotEnd.minute;
+      // C. Build provider's working hours as DateTime objects on that specific date
+      const providerDateStr = providerSlotStart.toISODate();
 
-      const scheduleStartMinutes = timeToMinutes(daySchedule.startTime);
-      let scheduleEndMinutes = timeToMinutes(daySchedule.endTime);
+      const workStart = DateTime.fromISO(`${providerDateStr}T${daySchedule.startTime}`, {
+        zone: careProvider.timezone,
+      });
 
-      // Handle overnight shift edge-case (e.g., 22:00 to 02:00)
-      if (scheduleEndMinutes <= scheduleStartMinutes) {
-        scheduleEndMinutes += 24 * 60;
+      let workEnd = DateTime.fromISO(`${providerDateStr}T${daySchedule.endTime}`, {
+        zone: careProvider.timezone,
+      });
+
+      // Handle overnight shifts (e.g., 22:00 -> 02:00)
+      if (workEnd <= workStart) {
+        workEnd = workEnd.plus({ days: 1 });
       }
 
-      // 6. Check if slot falls completely within provider working hours
-      const isWithinWorkingHours =
-        slotStartMinutes >= scheduleStartMinutes &&
-        slotEndMinutes <= scheduleEndMinutes;
+      // D. Verify slot fits within provider working hours
+      const isWithinHours =
+        currentSlotStart.toMillis() >= workStart.toMillis() &&
+        currentSlotEnd.toMillis() <= workEnd.toMillis();
 
-      if (isWithinWorkingHours) {
+      if (isWithinHours) {
         availableSlots.push({
-          startTime: currentSlotStart.toUTC().toISO(), // ISO format with UTC timezone
-          endTime: currentSlotEnd.toUTC().toISO(),
+          startTime: currentSlotStart.toUTC().toISO()!,
+          endTime: currentSlotEnd.toUTC().toISO()!,
         });
       }
     }
 
-    // Move to next 30-minute increment
+    // Advance to next 30-min window
     currentSlotStart = currentSlotEnd;
   }
 
-  // TODO: Filter out already booked slots from the Appointment database collection here
+  // TODO: Filter out booked appointments here
 
   return availableSlots;
 };
