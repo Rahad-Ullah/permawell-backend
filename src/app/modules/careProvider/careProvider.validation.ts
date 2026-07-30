@@ -57,7 +57,7 @@ const updateGalleryZodSchema = z.object({
 // get availability
 const getAvailabilityZodSchema = z.object({
   query: z.object({
-    providerId: objectId('Care Provider ID'),
+    provider: objectId('Care Provider ID'),
     date: z.string().date(),
     workplaceType: z.nativeEnum(WorkPlaceType),
     timezone: z.string().nonempty(),

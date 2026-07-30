@@ -33,9 +33,9 @@ const updateGallery = catchAsync(async (req: Request, res: Response) => {
 
 // get provider availability
 const getAvailability = catchAsync(async (req: Request, res: Response) => {
-  const { providerId, date, workplaceType, timezone } = req.query;
+  const { provider, date, workplaceType, timezone } = req.query;
   const result = await CareProviderServices.getAvailability(
-    providerId as string,
+    provider as string,
     date as string,
     workplaceType as string,
     timezone as string
