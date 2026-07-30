@@ -16,6 +16,19 @@ const createAppointment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// update appointment
+const updateAppointment = catchAsync(async (req: Request, res: Response) => {
+  const result = await AppointmentServices.updateAppointment(req.params.id, req.body, req.user);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Appointment updated successfully',
+    data: result,
+  });
+});
+
 export const AppointmentController = {
   createAppointment,
+  updateAppointment,
 };

@@ -3,8 +3,9 @@ import { Appointment } from './appointment.model';
 import { IAppointment } from './appointment.interface';
 import { StatusCodes } from 'http-status-codes';
 import { User } from '../user/user.model';
-import { UserStatus } from '../user/user.constant';
+import { UserRole, UserStatus } from '../user/user.constant';
 import { AppointmentStatus } from './appointment.constants';
+import { JwtPayload } from 'jsonwebtoken';
 
 
 // ---------------- create appointment -----------------
@@ -41,7 +42,31 @@ const createAppointment = async (payload: IAppointment): Promise<IAppointment> =
   return appointment;
 };
 
+// update appointment
+const updateAppointment = async (id: string, payload: IAppointment, user: JwtPayload) => {
+  // check status and user role
+  const careSeekerPermissions = [AppointmentStatus.Cancelled, AppointmentStatus.Completed];
+  const careProviderPermissions = [AppointmentStatus.Declined, AppointmentStatus.Confirmed, AppointmentStatus.Cancelled];
+
+  if (user.role === UserRole.CareSeeker && !careSeekerPermissions.includes(payload.status)) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You are not allowed to update this appointment');
+  }
+
+  if (user.role === UserRole.CareProvider && !careProviderPermissions.includes(payload.status)) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You are not allowed to update this appointment');
+  }
+
+  const result = await Appointment.findByIdAndUpdate(id, payload, { new: true });
+
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Appointment not found');
+  }
+
+  return result;
+};
+
 
 export const AppointmentServices = {
   createAppointment,
+  updateAppointment,
 };
