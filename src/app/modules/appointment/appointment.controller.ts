@@ -28,7 +28,34 @@ const updateAppointment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// get single by id
+const getAppointmentById = catchAsync(async (req: Request, res: Response) => {
+  const result = await AppointmentServices.getAppointmentById(req.params.id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Appointment fetched successfully',
+    data: result,
+  });
+});
+
+// get my appointments
+const getMyAppointments = catchAsync(async (req: Request, res: Response) => {
+  const result = await AppointmentServices.getMyAppointments(req.user.id, req.user.role, req.query);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Appointments fetched successfully',
+    data: result.data,
+    pagination: result.pagination
+  });
+});
+
 export const AppointmentController = {
   createAppointment,
   updateAppointment,
+  getAppointmentById,
+  getMyAppointments,
 };

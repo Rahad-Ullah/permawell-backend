@@ -38,8 +38,8 @@ const getSingleAppointmentSchema = z.object({
   }).strict()
 });
 
-// get single appointment by user validation schema
-const getSingleAppointmentByUserSchema = z.object({
+// get appointments by user validation schema
+const getAppointmentsByUserSchema = z.object({
   params: z.object({
     id: objectId('id')
   }).strict()
@@ -49,5 +49,5 @@ export const AppointmentValidations = {
   createAppointmentSchema,
   updateAppointmentSchema,
   getSingleAppointmentSchema,
-  getSingleAppointmentByUserSchema
+  getAppointmentsByUserSchema
 };

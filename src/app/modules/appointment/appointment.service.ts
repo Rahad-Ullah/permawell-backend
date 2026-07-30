@@ -6,6 +6,7 @@ import { User } from '../user/user.model';
 import { UserRole, UserStatus } from '../user/user.constant';
 import { AppointmentStatus } from './appointment.constants';
 import { JwtPayload } from 'jsonwebtoken';
+import QueryBuilder from '../../builder/QueryBuilder';
 
 
 // ---------------- create appointment -----------------
@@ -65,8 +66,43 @@ const updateAppointment = async (id: string, payload: IAppointment, user: JwtPay
   return result;
 };
 
+// get single appointment
+const getAppointmentById = async (id: string) => {
+  const result = await Appointment.findById(id).populate('careSeeker careProvider');
+
+  return result;
+};
+
+// get care seeker or care provider appointments
+const getMyAppointments = async (userId: string, role: string, query: Record<string, unknown>) => {
+  const filter = { isDeleted: false } as any;
+  // role based filter
+  if (role === UserRole.CareSeeker) {
+    filter.careSeeker = userId
+  }
+
+  if (role === UserRole.CareProvider) {
+    filter.careProvider = userId
+  }
+
+  const appointmentQuery = new QueryBuilder(Appointment.find(filter), query)
+    .filter()
+    .sort()
+    .paginate()
+    .fields()
+
+  const [data, pagination] = await Promise.all([
+    appointmentQuery.modelQuery.populate('careSeeker careProvider', 'name title email username image isOnline isDeleted'),
+    appointmentQuery.getPaginationInfo()
+  ])
+
+  return { data, pagination }
+};
+
 
 export const AppointmentServices = {
   createAppointment,
   updateAppointment,
+  getAppointmentById,
+  getMyAppointments,
 };

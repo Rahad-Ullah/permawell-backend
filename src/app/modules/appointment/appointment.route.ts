@@ -23,4 +23,19 @@ router.patch(
     AppointmentController.updateAppointment
 );
 
+// get single by id
+router.get(
+    '/single/:id',
+    auth(UserRole.CareSeeker, UserRole.CareProvider, UserRole.SuperAdmin, UserRole.Admin),
+    validateRequest(AppointmentValidations.getSingleAppointmentSchema),
+    AppointmentController.getAppointmentById
+);
+
+// get my appointments
+router.get(
+    '/my-appointments',
+    auth(UserRole.CareSeeker, UserRole.CareProvider),
+    AppointmentController.getMyAppointments
+);
+
 export const appointmentRoutes = router;
