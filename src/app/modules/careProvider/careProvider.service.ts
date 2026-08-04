@@ -4,6 +4,8 @@ import { StatusCodes } from 'http-status-codes';
 import { CareProvider } from './careProvider.model';
 import deleteS3File from '../../../shared/deleteS3File';
 import { DateTime } from 'luxon';
+import { Appointment } from '../appointment/appointment.model';
+import { AppointmentStatus } from '../appointment/appointment.constants';
 
 // ----------------- update care provider -----------------
 const updateCareProviderToDB = async (
@@ -92,7 +94,7 @@ export const getAvailability = async (
   userTimezone: string
 ) => {
   // 1. Fetch provider
-  const careProvider = await CareProvider.findById(providerId);
+  const careProvider = await CareProvider.findOne({ user: providerId });
   if (!careProvider) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "Care provider doesn't exist!");
   }
@@ -117,7 +119,10 @@ export const getAvailability = async (
   // 4. Generate 30-minute candidate slots
   const SLOT_DURATION_MINUTES = 30;
 
-  const availableSlots: { startTime: string; endTime: string }[] = [];
+  const BOOKING_BUFFER_MINUTES = 15;
+  const minAllowedStartMs = DateTime.now().plus({ minutes: BOOKING_BUFFER_MINUTES }).toMillis();
+
+  const candidateSlots: { startTime: string; endTime: string }[] = [];
   let currentSlotStart = userStartOfDay;
 
   while (currentSlotStart < userEndOfDay) {
@@ -155,8 +160,11 @@ export const getAvailability = async (
         currentSlotStart.toMillis() >= workStart.toMillis() &&
         currentSlotEnd.toMillis() <= workEnd.toMillis();
 
-      if (isWithinHours) {
-        availableSlots.push({
+      // E. Check if slot starts after the buffer period
+      const isFutureSlot = currentSlotStart.toMillis() >= minAllowedStartMs;
+
+      if (isWithinHours && isFutureSlot) {
+        candidateSlots.push({
           startTime: currentSlotStart.toUTC().toISO()!,
           endTime: currentSlotEnd.toUTC().toISO()!,
         });
@@ -167,7 +175,34 @@ export const getAvailability = async (
     currentSlotStart = currentSlotEnd;
   }
 
-  // TODO: Filter out booked appointments here
+  if (candidateSlots.length === 0) {
+    return [];
+  }
+
+  // 5. Fetch booked appointments overlapping user's local day range
+  // An appointment overlaps if it starts before userEndOfDay AND ends after userStartOfDay
+  const bookedAppointments = await Appointment.find({
+    careProvider: providerId,
+    startTime: { $lt: userEndOfDay.toJSDate() },
+    endTime: { $gt: userStartOfDay.toJSDate() },
+    status: { $in: [AppointmentStatus.Pending, AppointmentStatus.Confirmed] },
+  }).lean();
+
+  // 6. Filter out candidate slots that overlap with any existing appointment
+  const availableSlots = candidateSlots
+    .filter((slot) => {
+      const isBooked = bookedAppointments.some((appt) => {
+        const apptStartMs = new Date(appt.startTime).getTime();
+        const apptEndMs = new Date(appt.endTime).getTime();
+        const slotStartMs = new Date(slot.startTime).getTime();
+        const slotEndMs = new Date(slot.endTime).getTime();
+
+        // Two time ranges overlap if: SlotStart < ApptEnd AND SlotEnd > ApptStart
+        return slotStartMs < apptEndMs && slotEndMs > apptStartMs;
+      });
+
+      return !isBooked;
+    })
 
   return availableSlots;
 };

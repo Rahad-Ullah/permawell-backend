@@ -58,7 +58,12 @@ const updateGalleryZodSchema = z.object({
 const getAvailabilityZodSchema = z.object({
   query: z.object({
     provider: objectId('Care Provider ID'),
-    date: z.string().date(),
+    date: z.string().date().refine((date) => {
+      const today = new Date().toISOString().split("T")[0];
+      return date >= today;
+    }, {
+      message: "Please provide today's date or a future date",
+    }),
     workplaceType: z.nativeEnum(WorkPlaceType),
     timezone: z.string().nonempty(),
   })
