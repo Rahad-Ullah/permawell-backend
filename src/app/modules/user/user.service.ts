@@ -130,14 +130,33 @@ const updateProfileToDB = async (
   payload: Partial<IUser>,
 ): Promise<Partial<IUser | null>> => {
   const { id } = user;
-  const isExistUser = await User.isExistUserById(id);
-  if (!isExistUser) {
+  const existingUser = await User.isExistUserById(id);
+  if (!existingUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
-  //unlink file here
-  if (payload.image && isExistUser.image) {
-    deleteS3File(isExistUser.image);
+  // check username uniqueness
+  if (payload.username) {
+    const normalizedUsername = payload.username.trim();
+
+    // Only check if the username actually changed (case-insensitive check)
+    if (normalizedUsername.toLowerCase() !== existingUser.username.toLowerCase()) {
+      const isTakenUserName = await User.exists({
+        username: { $regex: new RegExp(`^${normalizedUsername}$`, 'i') },
+        _id: { $ne: existingUser._id },
+      });
+
+      if (isTakenUserName) {
+        throw new ApiError(StatusCodes.CONFLICT, 'Username is already taken!');
+      }
+
+      payload.username = normalizedUsername;
+    }
+  }
+
+  // unlink file here
+  if (payload.image && existingUser.image) {
+    deleteS3File(existingUser.image);
   }
 
   const updateDoc = await User.findOneAndUpdate({ _id: id }, payload, {

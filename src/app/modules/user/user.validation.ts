@@ -24,7 +24,21 @@ const updateUserZodSchema = z.object({
     .object({
       name: z.string().optional(),
       title: z.string().optional(),
-      username: z.string().optional(),
+      username: z
+        .string()
+        .trim()
+        .min(3, "Username must be at least 3 characters long")
+        .max(30, "Username cannot exceed 30 characters")
+        .regex(
+          /^[a-zA-Z]/,
+          "Username must start with a letter"
+        )
+        .regex(
+          /^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$/,
+          "Username can only contain letters, numbers, and single hyphens, and cannot end with a hyphen"
+        )
+        .transform((val) => val.toLowerCase())
+        .optional(),
       gender: z.enum([UserGender.Male, UserGender.Female, UserGender.Other]).optional(),
       dob: z.coerce.date().optional(),
       nationality: z.string().optional(),
