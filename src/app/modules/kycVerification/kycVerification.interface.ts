@@ -1,12 +1,12 @@
 import { Model, Types } from 'mongoose';
-import { VerificationStatus, VerificationType } from './kycVerification.constants';
+import { KycStatus, KycType } from './kycVerification.constants';
 
 export interface IKycVerification {
   _id: Types.ObjectId;
   user: Types.ObjectId;
-  type: VerificationType;
+  type: KycType;
   documents: string[];
-  status: VerificationStatus;
+  status: KycStatus;
   feedback: string;
   reviewedBy: Types.ObjectId;
   reviewedAt: Date;

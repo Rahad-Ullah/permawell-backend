@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { VerificationStatus, VerificationType } from './kycVerification.constants';
+import { KycStatus, KycType } from './kycVerification.constants';
 import { IKycVerification, KycVerificationModel } from './kycVerification.interface';
 
 const kycVerificationSchema = new Schema<IKycVerification, KycVerificationModel>({
@@ -10,7 +10,7 @@ const kycVerificationSchema = new Schema<IKycVerification, KycVerificationModel>
   },
   type: {
     type: String,
-    enum: VerificationType,
+    enum: KycType,
     required: true,
   },
   documents: {
@@ -20,9 +20,9 @@ const kycVerificationSchema = new Schema<IKycVerification, KycVerificationModel>
   },
   status: {
     type: String,
-    enum: VerificationStatus,
+    enum: KycStatus,
     required: true,
-    default: VerificationStatus.Pending,
+    default: KycStatus.Pending,
   },
   feedback: {
     type: String,
