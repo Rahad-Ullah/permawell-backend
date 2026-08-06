@@ -7,6 +7,8 @@ import { UserRole, UserStatus } from '../user/user.constant';
 import { AppointmentStatus } from './appointment.constants';
 import { JwtPayload } from 'jsonwebtoken';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { sendNotifications } from '../../../helpers/notificationHelper';
+import { NotificationType } from '../notification/notification.constant';
 
 
 // ---------------- create appointment -----------------
@@ -39,6 +41,17 @@ const createAppointment = async (payload: IAppointment): Promise<IAppointment> =
   payload.careProviderTimezone = careProvider?.timezone || 'UTC';
 
   const appointment = await Appointment.create(payload);
+  const populatedAppointment = await appointment.populate('careSeeker', 'name');
+  const populatedCareSeeker = populatedAppointment.careSeeker as any;
+
+  // send notification to provider
+  sendNotifications({
+    type: NotificationType.AppointmentCreated,
+    receiver: careProviderUser._id,
+    title: 'New Appointment',
+    message: `You have a new appointment request from ${populatedCareSeeker.name}`,
+    referenceId: appointment._id.toString(),
+  }).catch(err => console.error(err));
 
   return appointment;
 };
@@ -62,6 +75,15 @@ const updateAppointment = async (id: string, payload: IAppointment, user: JwtPay
   if (!result) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Appointment not found');
   }
+
+  // send notification to provider
+  sendNotifications({
+    type: NotificationType.AppointmentUpdated,
+    receiver: user.role === UserRole.CareSeeker ? result.careProvider : result.careSeeker,
+    title: `Appointment ${payload.status}`,
+    message: `Your appointment has been ${payload.status.toLowerCase()}`,
+    referenceId: result._id.toString(),
+  }).catch(err => console.error(err));
 
   return result;
 };
