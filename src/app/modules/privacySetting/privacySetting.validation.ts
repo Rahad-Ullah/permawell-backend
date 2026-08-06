@@ -1,31 +1,23 @@
 import { z } from 'zod';
 import { PrivacyAccessLevel } from './privacySetting.constants';
 
-export const UpdatePrivacySettingValidation = z.object({
+export const updatePrivacySettingValidation = z.object({
   body: z.object({
     emailAccess: z
-      .nativeEnum(PrivacyAccessLevel, {
-        message: 'Invalid email access level',
-      })
+      .nativeEnum(PrivacyAccessLevel)
       .optional(),
     mobileAccess: z
-      .nativeEnum(PrivacyAccessLevel, {
-        message: 'Invalid mobile access level',
-      })
+      .nativeEnum(PrivacyAccessLevel)
       .optional(),
     messagingAccess: z
-      .nativeEnum(PrivacyAccessLevel, {
-        message: 'Invalid messaging access level',
-      })
+      .nativeEnum(PrivacyAccessLevel)
       .optional(),
     fullAddressAccess: z
-      .nativeEnum(PrivacyAccessLevel, {
-        message: 'Invalid full address access level',
-      })
+      .nativeEnum(PrivacyAccessLevel)
       .optional(),
   }).strict()
 });
 
 export const PrivacySettingValidations = {
-  UpdatePrivacySettingValidation,
+  updatePrivacySettingValidation,
 };

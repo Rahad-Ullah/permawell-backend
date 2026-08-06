@@ -17,6 +17,7 @@ import { supportRoutes } from '../app/modules/support/support.route';
 import { appointmentRoutes } from '../app/modules/appointment/appointment.route';
 import { faqRoutes } from '../app/modules/faq/faq.route';
 import { kycVerificationRoutes } from '../app/modules/kycVerification/kycVerification.route';
+import { privacySettingRoutes } from '../app/modules/privacySetting/privacySetting.route';
 const router = express.Router();
 
 const apiRoutes: { path: string; route: any }[] = [
@@ -71,6 +72,10 @@ const apiRoutes: { path: string; route: any }[] = [
   {
     path: '/notifications',
     route: notificationRoutes,
+  },
+  {
+    path: '/privacy-settings',
+    route: privacySettingRoutes,
   },
   {
     path: '/kyc',
