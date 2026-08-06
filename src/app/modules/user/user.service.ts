@@ -215,6 +215,15 @@ const updateStatusToDB = async (
     new: true,
   });
 
+  // send notification to user
+  sendNotifications({
+    type: NotificationType.AppointmentCreated,
+    receiver: updateDoc?._id,
+    title: 'Account Status Updated',
+    message: `Your account has been ${payload.status.toLowerCase()}`,
+    referenceId: updateDoc?._id.toString(),
+  }).catch(err => console.error(err));
+
   return updateDoc;
 };
 
@@ -231,15 +240,6 @@ const deleteSingleUserFromDB = async (
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
   return result;
-};
-
-// ------------ get kyc by user id ------------
-const getKycByUserIdFromDB = async (id: string): Promise<Partial<IUser>> => {
-  const user = await User.findById(id).select('+verification');
-  if (!user) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
-  }
-  return user;
 };
 
 // ------------ get all care providers ------------
@@ -358,7 +358,6 @@ export const UserService = {
   createUserToDB,
   getSingleUserFromDB,
   getProfileFromDB,
-  getKycByUserIdFromDB,
   updateProfileToDB,
   updateStatusToDB,
   deleteSingleUserFromDB,
