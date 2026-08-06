@@ -18,6 +18,7 @@ import { appointmentRoutes } from '../app/modules/appointment/appointment.route'
 import { faqRoutes } from '../app/modules/faq/faq.route';
 import { kycVerificationRoutes } from '../app/modules/kycVerification/kycVerification.route';
 import { privacySettingRoutes } from '../app/modules/privacySetting/privacySetting.route';
+import { analyticsRoutes } from '../app/modules/analytics/analytics.route';
 const router = express.Router();
 
 const apiRoutes: { path: string; route: any }[] = [
@@ -72,6 +73,10 @@ const apiRoutes: { path: string; route: any }[] = [
   {
     path: '/notifications',
     route: notificationRoutes,
+  },
+  {
+    path: '/analytics',
+    route: analyticsRoutes,
   },
   {
     path: '/privacy-settings',
