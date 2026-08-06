@@ -16,6 +16,8 @@ import { CareProvider } from '../careProvider/careProvider.model';
 import { ICareProvider } from '../careProvider/careProvider.interface';
 import { Wishlist } from '../wishlist/wishlist.model';
 import { calculateDistance } from '../../../utils/calculateDistance';
+import { PrivacySetting } from '../privacySetting/privacySetting.model';
+import { PrivacyAccessLevel } from '../privacySetting/privacySetting.constants';
 
 const createUserToDB = async (payload: Partial<IUser>) => {
   const session = await mongoose.startSession();
@@ -35,6 +37,15 @@ const createUserToDB = async (payload: Partial<IUser>) => {
     const [createdUser] = await User.create([payload], { session });
     if (!createdUser) {
       throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
+    }
+
+    // create privacy setting for care seeker
+    if (createdUser.role === UserRole.CareSeeker) {
+      await PrivacySetting.create([{
+        user: createdUser._id,
+      }], {
+        session,
+      });
     }
 
     // Create care provider profile
@@ -91,13 +102,37 @@ const createUserToDB = async (payload: Partial<IUser>) => {
   }
 };
 
-const getSingleUserFromDB = async (id: string): Promise<Partial<IUser>> => {
-  const user = await User.findById(id).populate('roleRef');
-  if (!user) {
+const getSingleUserFromDB = async (id: string, user: JwtPayload) => {
+  const existingUser = await User.findById(id).populate('roleRef');
+  if (!existingUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
-  return user;
+  // check privacy setting
+  if (existingUser.role === UserRole.CareSeeker && user.role === UserRole.CareProvider) {
+    const [privacySetting, isFavoriteProvider] = await Promise.all([
+      PrivacySetting.findOne({ user: existingUser._id }),
+      Wishlist.findOne({ user: existingUser._id, careProvider: user.id }),
+    ]);
+
+    const hasAccess = (access: PrivacyAccessLevel = PrivacyAccessLevel.AllProviders) => {
+      if (access === PrivacyAccessLevel.AllProviders) return true;
+      if (access === PrivacyAccessLevel.FavoriteProvidersOnly && isFavoriteProvider) return true;
+      return false;
+    }
+
+    return {
+      ...existingUser.toObject(),
+      privacySetting: {
+        emailAccess: hasAccess(privacySetting?.emailAccess),
+        mobileAccess: hasAccess(privacySetting?.mobileAccess),
+        messagingAccess: hasAccess(privacySetting?.messagingAccess),
+        fullAddressAccess: hasAccess(privacySetting?.fullAddressAccess),
+      },
+    };
+  }
+
+  return existingUser;
 };
 
 const getProfileFromDB = async (id: string): Promise<Partial<IUser>> => {

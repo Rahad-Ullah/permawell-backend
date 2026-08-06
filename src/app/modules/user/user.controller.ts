@@ -31,7 +31,7 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
 
 // get single user by id
 const getSingleUser = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.getSingleUserFromDB(req.params.id);
+  const result = await UserService.getSingleUserFromDB(req.params.id, req.user);
 
   sendResponse(res, {
     success: true,
