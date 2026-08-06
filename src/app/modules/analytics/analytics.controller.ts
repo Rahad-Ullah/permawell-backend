@@ -16,6 +16,32 @@ const getProviderOverview = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// get admin overview
+const getAdminOverview = catchAsync(async (req: Request, res: Response) => {
+  const result = await AnalyticsServices.getAdminOverview();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    data: result,
+    message: 'Admin overview fetched successfully'
+  });
+});
+
+// get monthly user growth
+const getMonthlyUserGrowth = catchAsync(async (req: Request, res: Response) => {
+  const result = await AnalyticsServices.getMonthlyUserGrowth(req.query);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    data: result,
+    message: 'Monthly user growth fetched successfully'
+  });
+});
+
 export const AnalyticsController = {
-  getProviderOverview
+  getProviderOverview,
+  getAdminOverview,
+  getMonthlyUserGrowth
 };
